@@ -1,0 +1,5 @@
+cmake .. -DEIGEN3_INCLUDE_DIR=/c/eigen/ -DN3L_INCLUDE_DIR=/d/workspace/LibN3L-2.0/
+cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/
+
+
+-l -train D:\data\textnormalization\train.ctb60.corpus -dev D:\data\textnormalization\dev.ctb60.corpus -test D:\data\textnormalization\test.ctb60.corpus -option D:\data\textnormalization\option.lstm16
