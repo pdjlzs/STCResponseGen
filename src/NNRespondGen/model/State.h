@@ -19,17 +19,11 @@
 class CStateItem {
 public:
 	std::string _word;
-	int _wstart;
-	int _wend;
-	CStateItem *_prevStartWordState;
 	CStateItem *_prevState;
 	int _next_index;
-
-	const std::vector<std::string> *_chars;
-	int _char_size;
 	int _word_count;
 
-	CAction _lastAction;	
+	CAction _lastAction;
 	PNode _score;
 
 	// features
@@ -55,31 +49,18 @@ public:
 		_nextscores.initial(params, hyparams, mem);
 	}
 
-	void setInput(const std::vector<std::string>* pCharacters) {
-		_chars = pCharacters;
-		_char_size = pCharacters->size();
-	}
 
 	void clear() {
-		_word = "";
-		_wstart = -1;
-		_wend = -1;
-		_prevStartWordState = 0;
+		_word = "-start-";
 		_prevState = 0;
 		_next_index = 0;
-		_chars = 0;
-		_char_size = 0;
-		_lastAction.clear();
 		_word_count = 0;
+		_lastAction.set(CAction::SEP, _word);
 		_bStart = true;
 		_bGold = true;
 		_score = NULL;
 	}
 
-
-	const CStateItem* getPrevStackState() const{
-		return _prevStartWordState;
-	}
 
 	const CStateItem* getPrevState() const{
 		return _prevState;
@@ -93,67 +74,40 @@ public:
 public:
 	//only assign context
 	void separate(CStateItem* next, const string& rword){
-		if (_next_index >= _char_size) {
-			std::cout << "separate error" << std::endl;
-			return;
-		}
-		next->_word = (*_chars)[_next_index];
-		next->_wstart = _next_index;
-		next->_wend = _next_index;
-		next->_prevStartWordState = next;
+		next->_word = rword;
 		next->_prevState = this;
 		next->_next_index = _next_index + 1;
-		next->_chars = _chars;
-		next->_char_size = _char_size;
 		next->_word_count = _word_count + 1;
 		next->_lastAction.set(CAction::SEP, rword);
 	}
 
 	//only assign context
 	void finish(CStateItem* next, const string& rword){
-		if (_next_index != _char_size) {
-			std::cout << "finish error" << std::endl;
-			return;
-		}
-		next->_word = "";
-		next->_wstart = -1;
-		next->_wend = -1;
-		next->_prevStartWordState = next;
+		next->_word = rword;
 		next->_prevState = this;
 		next->_next_index = _next_index + 1;
-		next->_chars = _chars;
-		next->_char_size = _char_size;
 		next->_word_count = _word_count;
 		next->_lastAction.set(CAction::FIN, rword);
 	}
 
-	//only assign context
-	void append(CStateItem* next){
-		if (_next_index >= _char_size) {
-			std::cout << "append error" << std::endl;
-			return;
-		}
-		next->_word = _word + (*_chars)[_next_index];
-		next->_wstart = _wstart;
-		next->_wend = _next_index;
-		next->_prevStartWordState = _prevStartWordState;
-		next->_prevState = this;
+	void idle(CStateItem* next, const string& rword){
+		next->_word = "";
+		next->_prevState = _prevState;
 		next->_next_index = _next_index + 1;
-		next->_chars = _chars;
-		next->_char_size = _char_size;
 		next->_word_count = _word_count;
-		next->_lastAction.set(CAction::APP, "");
+		next->_lastAction.set(CAction::IDLE, rword);
 	}
 
+
 	void move(CStateItem* next, const CAction& ac){
-		if (ac.isAppend()) {
-			append(next);
-		}
-		else if (ac.isSeparate()) {
+		if (ac.isSeparate()) {
 			separate(next, ac._word);
 		}
 		else if (ac.isFinish()) {
 			finish(next, ac._word);
+		}
+		else if (ac.isIdle()) {
+			idle(next, ac._word);
 		}
 		else {
 			std::cout << "error action" << std::endl;
@@ -164,103 +118,76 @@ public:
 	}
 
 	bool IsTerminated() const {
-		if (_lastAction.isFinish())
+		if (_lastAction.isFinish() || _lastAction.isIdle())
 			return true;
 		return false;
 	}
 
 	//partial results
-	void getSegResults(std::vector<std::string>& words, std::vector<std::string>& normwords) const {
-		words.clear();  normwords.clear();
+	void getSegResults(std::vector<std::string>& resp_words) const {
+		resp_words.clear();
 		if (!IsTerminated()) {
-			normwords.insert(normwords.begin(), _word);
-			words.insert(words.begin(), _word);
+			resp_words.insert(resp_words.begin(), _word);
 		}
 
-		const CStateItem *prevStartWordState = _prevStartWordState;
-		while (prevStartWordState != 0 && prevStartWordState->_lastAction._word != "") {
-			normwords.insert(normwords.begin(), prevStartWordState->_lastAction._word);
-			words.insert(words.begin(), prevStartWordState->_prevState->_word);
-			prevStartWordState = prevStartWordState->_prevState->_prevStartWordState;
+		const CStateItem *prevState = this->_prevState;
+		while (prevState != 0 && prevState->_word != "") {
+			resp_words.insert(resp_words.begin(), prevState->_word);
+			prevState = prevState->_prevState;
 		}
 
-		if (normwords.size() != _word_count || words.size() != _word_count) {
-			std::cout << "bug exists: " << normwords.size() << " " << _word_count << std::endl;
+		if (resp_words.size() != _word_count) {
+			std::cout << "bug exists: " << resp_words.size() << " " << _word_count << std::endl;
 		}
 	}
 
-	void getGoldAction(const std::vector<std::string>& segments, const std::vector<std::string>& normsegments, CAction& ac) const {
-		if (_next_index == _char_size) {
-			ac.set(CAction::FIN, normsegments[_word_count - 1]);
-			return;
-		}
-		if (_next_index == 0) {
-			ac.set(CAction::SEP, "");
+	void getGoldAction(const std::vector<std::string>& resp_words, CAction& ac) const {
+		if (_next_index == resp_words.size()){
+			ac.set(CAction::FIN, "-end-");
 			return;
 		}
 
-		if (_next_index > 0 && _next_index < _char_size) {
+		if (_next_index >= 0 && _next_index < resp_words.size()) {
 			// should have a check here to see whether the words are match, but I did not do it here
-			if (_word.length() == segments[_word_count - 1].length()) {
-				ac.set(CAction::SEP, normsegments[_word_count - 1]);
-				return;
-			}
-			else {
-				ac.set(CAction::APP, "");
-				return;
-			}
+			ac.set(CAction::SEP, resp_words[_word_count]);
+			return;
 		}
 
 		ac.set(CAction::NO_ACTION, "");
 		return;
 	}
 
-	// we did not judge whether history actions are match with current state.
-	void getGoldAction(const CStateItem* goldState, CAction& ac) const{
-		if (_next_index > goldState->_next_index || _next_index < 0) {
-			ac.set(CAction::NO_ACTION, "");
-			return;
-		}
-		const CStateItem *prevState = goldState->_prevState;
-		CAction curAction = goldState->_lastAction;
-		while (_next_index < prevState->_next_index) {
-			curAction = prevState->_lastAction;
-			prevState = prevState->_prevState;
-		}
-		return ac.set(curAction._code, curAction._word);
-	}
 
 	void getCandidateActions(vector<CAction> & actions, HyperParams* pHyparams) const{
 		actions.clear();
 		static CAction ac;
+		unordered_map<string, vector<string> >& word_map = pHyparams->word_map;
+		/*
 		if (_next_index == 0){
-			ac.set(CAction::SEP, "");
+			vector<string>& startCandi = word_map["-start-"];
+			for (int idy = 0; idy < startCandi.size(); idy++) {
+				ac.set(CAction::SEP, startCandi[idy]);
+				actions.push_back(ac);
+			}
+		}
+		*/
+		if (_word == "-end-"){
+			ac.set(CAction::FIN, "");
 			actions.push_back(ac);
 		}
-		else if (_next_index == _char_size){
-			ac.set(CAction::FIN, _word);
+		else if (_word == ""){
+			ac.set(CAction::IDLE, "");
 			actions.push_back(ac);
-			if (pHyparams->word_map.find(_word) != pHyparams->word_map.end()) {
-				for (int idy = 0; idy < pHyparams->word_map[_word].size(); idy++) {
-					ac.set(CAction::FIN, pHyparams->word_map[_word][idy]);
+		}
+		else {
+			if (word_map.find(_word) != word_map.end()) {
+				vector<string>& wordCandi = word_map[_word];
+				for (int idy = 0; idy < wordCandi.size(); idy++) {
+					ac.set(CAction::SEP, wordCandi[idy]);
 					actions.push_back(ac);
 				}
 			}
-		}
-		else if (_next_index > 0 && _next_index < _char_size){
-			ac.set(CAction::SEP, _word);
-			actions.push_back(ac);
-			if (pHyparams->word_map.find(_word) != pHyparams->word_map.end()) {
-				for (int idy = 0; idy < pHyparams->word_map[_word].size(); idy++) {
-					ac.set(CAction::SEP, pHyparams->word_map[_word][idy]);
-					actions.push_back(ac);
-				}
-			}
-			ac.set(CAction::APP, "");
-			actions.push_back(ac);
-		}
-		else{
-
+			else std::cout << _word << " is not in dic" << endl;
 		}
 
 	}
@@ -268,11 +195,11 @@ public:
 	inline std::string str() const{
 		stringstream curoutstr;
 		curoutstr << "score: " << _score->val[0] << " ";
-		curoutstr << "seg:";
-		std::vector<std::string> words, normwords;
-		getSegResults(words, normwords);
-		for (int idx = 0; idx < words.size(); idx++){
-			curoutstr << " " << words[idx] << "_"  << normwords[idx];
+		curoutstr << "respond words:";
+		std::vector<std::string> resp_words;
+		getSegResults(resp_words);
+		for (int idx = 0; idx < resp_words.size(); idx++){
+			curoutstr << " " << resp_words[idx];
 		}
 
 		curoutstr << "actions:";
@@ -302,18 +229,12 @@ public:
 	}
 
 	inline void prepare(HyperParams* hyper_params, ModelParams* model_params, GlobalNodes* global_nodes){
-		_atomFeat.str_2W = nullkey;
-		if(_prevStartWordState != 0 && !_prevStartWordState->_bStart){
-			_atomFeat.str_2W = _prevStartWordState->_lastAction._word;			
-		}
 
 		_atomFeat.str_1AC = _lastAction.typestr();
-		_atomFeat.str_2AC = _prevState == 0 ?  nullkey: _prevState->_lastAction.typestr();
-		_atomFeat.p_action_lstm = _prevState == 0 ? NULL : &(_prevState->_nextscores.action_lstm);
-		_atomFeat.p_word_lstm = _inc_nodes.word_lstm;
-		_atomFeat.next_position = _next_index >= 0 && _next_index < _char_size ? _next_index : -1;
-		_atomFeat.p_char_left_lstm = global_nodes == NULL ? NULL : &(global_nodes->char_left_lstm);
-		_atomFeat.p_char_right_lstm = global_nodes == NULL ? NULL : &(global_nodes->char_right_lstm);
+		_atomFeat.str_2AC = _prevState == 0 ? nullkey : _prevState->_lastAction.typestr();
+		_atomFeat.pre_actions_lstm = _prevState == 0 ? NULL : &(_prevState->_nextscores.action_lstm);
+		_atomFeat.pre_words_lstm = _prevState == 0 ? global_nodes->word_lstm : &(_prevState->_nextscores.word_lstm);
+		_atomFeat.next_position = _next_index;
 	}
 };
 

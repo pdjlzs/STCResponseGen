@@ -45,28 +45,13 @@ public:
 		split_bychar(vecLine[0], wordInfo, ' ');
 		split_bychar(vecLine[1], normwordInfo, ' ');
 
-		if (wordInfo.size() != normwordInfo.size()) {
-			std::cout << "error: word and normword sequence not match!" << std::endl;
-			return getNext();
-		}
+		getCharactersFromUTF8String(vecLine[0], charInfo);
 
-		int charcount = 0;
-		strLine = "";
-		for (int i = 0; i < wordInfo.size(); ++i) {
-			charcount += getUTF8StringLength(wordInfo[i]);
-			strLine += wordInfo[i];
-		}
-
-		getCharactersFromUTF8String(strLine, charInfo);
-
-		if (charcount != charInfo.size()) {
-			std::cout << "error: seg and char sequence not match!" << std::endl;
-			return getNext();
-		}
-
-		m_instance.allocate(wordInfo.size(), charInfo.size());
+		m_instance.allocate(wordInfo.size(), normwordInfo.size(), charInfo.size());
 		for (int i = 0; i < wordInfo.size(); ++i) {
 			m_instance.words[i] = wordInfo[i];
+		}
+		for (int i = 0; i < normwordInfo.size(); i++){
 			m_instance.normwords[i] = normwordInfo[i];
 		}
 		for (int i = 0; i < charInfo.size(); ++i) {

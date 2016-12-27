@@ -18,7 +18,7 @@
 // for segmentation, there are only threee valid operations
 class CAction {
 public:
-	enum CODE { SEP = 0, APP = 1, FIN = 2, NO_ACTION = 3 };
+	enum CODE { SEP = 0, FIN = 1, IDLE = 2, NO_ACTION = 3 };
 	unsigned long _code;
 	std::string _word;
 
@@ -44,8 +44,11 @@ public:
 
 	inline void set(int code, const std::string& word) {
 		_code = code;
-		if (_code == SEP || _code == FIN) {
+		if (_code == SEP){
 			_word = word;
+		}
+		else if (_code == FIN) {
+			_word = "-end-";
 		}
 		else {
 			_word = "";
@@ -59,14 +62,14 @@ public:
 
 	inline bool isNone() const { return _code == NO_ACTION; }
 	inline bool isSeparate() const { return _code == SEP; }
-	inline bool isAppend() const { return _code == APP; }
+	inline bool isIdle() const { return _code == IDLE; }
 	inline bool isFinish() const { return _code == FIN; }
 
 public:
 	inline std::string typestr() const {
 		if (isNone()) { return "NONE"; }
 		if (isSeparate()) { return "SEP"; }
-		if (isAppend()) { return "APP"; }
+		if (isIdle()) { return "IDLE"; }
 		if (isFinish()) { return "FIN"; }
 		return "NONE";
 	}
@@ -74,7 +77,7 @@ public:
 	inline std::string str() const {
 		if (isNone()) { return "NONE"; }
 		if (isSeparate()) { return "SEP=" + _word; }
-		if (isAppend()) { return "APP"; }
+		if (isIdle()) { return "IDLE"; }
 		if (isFinish()) { return "FIN=" + _word; }
 		return "NONE";
 	}	

@@ -1,5 +1,5 @@
 /*
- * Normalizer.cpp
+ * RespondGen.cpp
  *
  *  Created on: Jan 25, 2016
  *      Author: mszhang
@@ -9,19 +9,19 @@
 
 #include "Argument_helper.h"
 
-Normalizer::Normalizer(size_t memsize) : m_driver(memsize) {
+RespondGen::RespondGen(size_t memsize) : m_driver(memsize) {
 	// TODO Auto-generated constructor stub
 	srand(0);
 	//Node::id = 0;
 }
 
-Normalizer::~Normalizer() {
+RespondGen::~RespondGen() {
 	// TODO Auto-generated destructor stub
 }
 
-int Normalizer::initialActionWordMap() {
+int RespondGen::initialActionWordMap() {
 	m_driver._hyperparams.word_map.clear();
-	m_driver._hyperparams.reverse_word_map.clear();
+	//m_driver._hyperparams.reverse_word_map.clear();
 	if (m_options.mapFile == "") {
 		return -1;
 	}
@@ -33,6 +33,7 @@ int Normalizer::initialActionWordMap() {
 	}
 	inf.open(m_options.mapFile.c_str());
 	int maxCandidate = 0;
+	int dic_num = 0;
 	static string strLine;
 	static vector<string> vecInfo;
 	while (1) {
@@ -43,32 +44,28 @@ int Normalizer::initialActionWordMap() {
 			split_bychar(strLine, vecInfo, ' ');
 			for (int j = 1; j < vecInfo.size(); j++) {
 				m_driver._hyperparams.word_map[vecInfo[0]].push_back(vecInfo[j]);
-				m_driver._hyperparams.reverse_word_map[vecInfo[j]].push_back(vecInfo[0]);
 			}
 			if (vecInfo.size() - 1 > maxCandidate) maxCandidate = vecInfo.size() - 1;
 		}
+		if ((dic_num + 1) % 10000 == 0) {
+			cout << dic_num + 1 << " ";
+			if ((dic_num + 1) % (40 * 10000) == 0)
+				cout << std::endl;
+			cout.flush();
+		}
+		dic_num++;
 	}
 	inf.close();
 	m_driver._hyperparams.action_num = CAction::NO_ACTION + maxCandidate;
 }
 
 // all linear features are extracted from positive examples
-int Normalizer::createAlphabet(const vector<Instance>& vecInsts) {
+int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	cout << "Creating Alphabet..." << endl;
 
 	int numInstance = vecInsts.size();
 
 	unordered_map<string, int> word_stat;
-	unordered_map<string, int> char_stat;
-	unordered_map<string, int> bichar_stat;
-	unordered_map<string, int> charType_stat;
-	charType_stat["U"] = 1;
-	charType_stat["u"] = 1;
-	charType_stat["e"] = 1;
-	charType_stat["E"] = 1;
-	charType_stat["p"] = 1;
-	charType_stat["d"] = 1;
-	charType_stat["o"] = 1;
 
 	assert(numInstance > 0);
 	int count = 0;
@@ -77,23 +74,10 @@ int Normalizer::createAlphabet(const vector<Instance>& vecInsts) {
 		for (int idx = 0; idx < instance.wordsize(); idx++) {
 			word_stat[normalize_to_lowerwithdigit(instance.words[idx])]++;
 		}
-		for (int idx = 0; idx < instance.charsize(); idx++) {
-			charType_stat[instance.chars[idx]]++;
-			char_stat[instance.chars[idx]]++;
-			if (idx < instance.charsize() - 1) {
-				bichar_stat[instance.chars[idx] + instance.chars[idx + 1]]++;
-			}
-		}
-		count += instance.wordsize();
 	}
 	word_stat[nullkey] = m_options.wordCutOff + 1;
 	word_stat[unknownkey] = m_options.wordCutOff + 1;
-	char_stat[nullkey] = m_options.charCutOff + 1;
-	char_stat[unknownkey] = m_options.charCutOff + 1;
-	bichar_stat[nullkey] = m_options.bicharCutOff + 1;
-	bichar_stat[unknownkey] = m_options.bicharCutOff + 1;
 	m_driver._modelparams.words.initial(word_stat, 0);
-	m_driver._modelparams.chars.initial(char_stat, 0);
 
 	if (!m_options.wordEmbFineTune && m_options.wordEmbFile != "") {
 		m_driver._modelparams.embeded_words.initial(m_options.wordEmbFile);
@@ -101,25 +85,6 @@ int Normalizer::createAlphabet(const vector<Instance>& vecInsts) {
 	if (!m_driver._modelparams.embeded_words.is_fixed()) {
 		m_driver._modelparams.embeded_words.initial(word_stat, m_options.wordCutOff);
 	}
-
-	if (!m_options.charEmbFineTune && m_options.charEmbFile != "") {
-		m_driver._modelparams.embeded_chars.initial(m_options.charEmbFile);
-	}
-	if (!m_driver._modelparams.embeded_chars.is_fixed()) {
-		m_driver._modelparams.embeded_chars.initial(char_stat, m_options.charCutOff);
-	}
-
-	if (!m_options.bicharEmbFineTune && m_options.bicharEmbFile != "") {
-		m_driver._modelparams.embeded_bichars.initial(m_options.bicharEmbFile);
-	}
-	if (!m_driver._modelparams.embeded_bichars.is_fixed()) {
-		m_driver._modelparams.embeded_bichars.initial(bichar_stat, m_options.charCutOff);
-	}
-
-	m_driver._modelparams.embeded_chartypes.initial(charType_stat);
-	charType_stat[nullkey] = 1;
-	m_driver._modelparams.charTypes.initial(charType_stat);
-
 
 	unordered_map<string, int> action_stat;
 
@@ -133,19 +98,16 @@ int Normalizer::createAlphabet(const vector<Instance>& vecInsts) {
 		const Instance &instance = vecInsts[numInstance];
 		actionNum = 0;
 		state[actionNum].clear();
-		state[actionNum].setInput(&instance.chars);
+		//state[actionNum].setInput(&instance.words);
 		action_stat[state[actionNum]._lastAction.typestr()]++;
 		while (!state[actionNum].IsTerminated()) {
-			state[actionNum].getGoldAction(instance.words, instance.normwords, answer);
+			state[actionNum].getGoldAction(instance.normwords, answer);
 			state[actionNum].move(&(state[actionNum + 1]), answer);
 			actionNum++;
-			action_stat[answer.typestr()]++;
+			action_stat[answer.str()]++;
 		}
 
-		if (actionNum - 1 != instance.charsize()) {
-			std::cout << "action number is not correct, please check" << std::endl;
-		}
-		state[actionNum].getSegResults(output, normoutput);
+		state[actionNum].getSegResults(normoutput);
 
 		instance.evaluate(output, normoutput, eval, evalnorm);
 
@@ -169,16 +131,12 @@ int Normalizer::createAlphabet(const vector<Instance>& vecInsts) {
 
 	cout << numInstance << " " << endl;
 	cout << "Total word num: " << word_stat.size() << endl;
-	cout << "Total char num: " << char_stat.size() << endl;
-
 	cout << "Remain word num: " << m_driver._modelparams.words.size() << endl;
-	cout << "Remain char num: " << m_driver._modelparams.chars.size() << endl;
-	cout << "Remain charType num: " << m_driver._modelparams.charTypes.size() << endl;
 
 	return 0;
 }
 
-void Normalizer::getGoldActions(const vector<Instance>& vecInsts, vector<vector<CAction> >& vecActions) {
+void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<CAction> >& vecActions) {
 	vecActions.clear();
 
 	Metric eval, evalnorm;
@@ -193,18 +151,15 @@ void Normalizer::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 
 		actionNum = 0;
 		state[actionNum].clear();
-		state[actionNum].setInput(&instance.chars);
+		//state[actionNum].setInput(&instance.words);
 		while (!state[actionNum].IsTerminated()) {
-			state[actionNum].getGoldAction(instance.words, instance.normwords, answer);
+			state[actionNum].getGoldAction(instance.normwords, answer);
 			vecActions[numInstance].push_back(answer);
 			state[actionNum].move(&state[actionNum + 1], answer);
 			actionNum++;
 		}
 
-		if (actionNum - 1 != instance.charsize()) {
-			std::cout << "action number is not correct, please check" << std::endl;
-		}
-		state[actionNum].getSegResults(output, normoutput);
+		state[actionNum].getSegResults(normoutput);
 
 		instance.evaluate(output, normoutput, eval, evalnorm);
 
@@ -224,38 +179,7 @@ void Normalizer::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 	}
 }
 
-void Normalizer::getGoldActions(const Instance& inst, vector<CAction>& actions) {
-	actions.clear();
-
-	Metric eval, evalnorm;
-	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
-	vector<string> output, normoutput;
-	CAction answer;
-	eval.reset(); evalnorm.reset();
-	int actionNum = 0;
-	state[actionNum].clear();
-	state[actionNum].setInput(&inst.chars);
-	while (!state[actionNum].IsTerminated()) {
-		state[actionNum].getGoldAction(inst.words, inst.normwords, answer);
-		actions.push_back(answer);
-		state[actionNum].move(&state[actionNum + 1], answer);
-		actionNum++;
-	}
-
-	if (actionNum - 1 != inst.charsize()) {
-		std::cout << "action number is not correct, please check" << std::endl;
-	}
-	state[actionNum].getSegResults(output, normoutput);
-
-	inst.evaluate(output, normoutput, eval, evalnorm);
-
-	if (!eval.bIdentical()) {
-		std::cout << "error state conversion!" << std::endl;
-		exit(0);
-	}
-}
-
-void Normalizer::train(const string& trainFile, const string& devFile, const string& testFile, const string& modelFile, const string& optionFile) {
+void RespondGen::train(const string& trainFile, const string& devFile, const string& testFile, const string& modelFile, const string& optionFile) {
 	if (optionFile != "")
 		m_options.load(optionFile);
 
@@ -290,34 +214,7 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 		m_driver._modelparams.word_table.initial(&m_driver._modelparams.embeded_words, m_options.wordEmbSize, true);
 	}
 
-	initial_successed = false;
-	if (m_options.charEmbFile != "") {
-		initial_successed = m_driver._modelparams.char_table.initial(&m_driver._modelparams.embeded_chars, m_options.charEmbFile, m_options.charEmbFineTune, m_options.charEmbNormalize);
-		if (initial_successed) {
-			m_options.charEmbSize = m_driver._modelparams.char_table.nDim;
-		}
-	}
-	if (!initial_successed) {
-		m_options.charEmbFineTune = true;
-		m_driver._modelparams.char_table.initial(&m_driver._modelparams.embeded_chars, m_options.charEmbSize, true);
-	}
-
-	initial_successed = false;
-	if (m_options.bicharEmbFile != "") {
-		initial_successed = m_driver._modelparams.bichar_table.initial(&m_driver._modelparams.embeded_bichars, m_options.bicharEmbFile, m_options.bicharEmbFineTune, m_options.bicharEmbNormalize);
-		if (initial_successed) {
-			m_options.bicharEmbSize = m_driver._modelparams.bichar_table.nDim;
-		}
-	}
-	if (!initial_successed) {
-		m_options.bicharEmbFineTune = true;
-		m_driver._modelparams.bichar_table.initial(&m_driver._modelparams.embeded_bichars, m_options.bicharEmbSize, true);
-	}
-
 	m_driver._modelparams.action_table.initial(&m_driver._modelparams.embeded_actions, m_options.actionEmbSize, true);
-	m_driver._modelparams.chartype_table.initial(&m_driver._modelparams.embeded_chartypes, m_options.actionEmbSize, true);
-
-	//m_driver._hyperparams.action_num = CAction::FIN + 1;
 	m_driver._hyperparams.setRequared(m_options);
 	m_driver.initial();
 
@@ -359,10 +256,8 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 			for (int idy = 0; idy < inputSize; idy++) {
 				subInstances.clear();
 				subInstGoldActions.clear();
-				randomInput(trainInsts[indexes[idy]], inst);
-				subInstances.push_back(inst.chars);
-				getGoldActions(inst, actions);
-				subInstGoldActions.push_back(actions);
+				subInstances.push_back(trainInsts[indexes[idy]].words);
+				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
 
 				double cost = m_driver.train(subInstances, subInstGoldActions);
 
@@ -381,10 +276,9 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 			subInstances.clear();
 			subInstGoldActions.clear();
 			for (int idy = 0; idy < m_options.batchSize; idy++) {
-				randomInput(trainInsts[indexes[idy]], inst);
-				subInstances.push_back(inst.chars);
-				getGoldActions(inst, actions);
-				subInstGoldActions.push_back(actions);
+				subInstances.push_back(trainInsts[indexes[idy]].words);
+				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
+
 			}
 			double cost = m_driver.train(subInstances, subInstGoldActions);
 
@@ -410,7 +304,7 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 			}
 			metric_dev.reset(); metricnorm_dev.reset();
 			for (int idx = 0; idx < devInsts.size(); idx++) {
-				predict(devInsts[idx], curDecodeInst, curDecodeNormInst);
+				predict(devInsts[idx], curDecodeNormInst);
 				devInsts[idx].evaluate(curDecodeInst, curDecodeNormInst, metric_dev, metricnorm_dev);
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.push_back(curDecodeInst);
@@ -436,7 +330,7 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 				}
 				metric_test.reset(); metricnorm_test.reset();
 				for (int idx = 0; idx < testInsts.size(); idx++) {
-					predict(testInsts[idx], curDecodeInst, curDecodeNormInst);
+					predict(testInsts[idx], curDecodeNormInst);
 					testInsts[idx].evaluate(curDecodeInst, curDecodeNormInst, metric_test, metricnorm_test);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
@@ -462,7 +356,7 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 				}
 				metric_test.reset(); metricnorm_test.reset();
 				for (int idy = 0; idy < otherInsts[idx].size(); idy++) {
-					predict(otherInsts[idx][idy], curDecodeInst, curDecodeNormInst);
+					predict(otherInsts[idx][idy], curDecodeNormInst);
 					otherInsts[idx][idy].evaluate(curDecodeInst, curDecodeNormInst, metric_test, metricnorm_test);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
@@ -480,7 +374,7 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 			}
 
 
-			if (m_options.saveIntermediate && metric_dev.getAccuracy() > bestFmeasure) {
+			if (metric_dev.getAccuracy() > bestFmeasure) {
 				std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
 				bestFmeasure = metric_dev.getAccuracy();
 				writeModelFile(modelFile);
@@ -489,11 +383,11 @@ void Normalizer::train(const string& trainFile, const string& devFile, const str
 	}
 }
 
-void Normalizer::predict(const Instance& input, vector<string>& output, vector<string>& normoutput) {
-	m_driver.decode(input.chars, output, normoutput);
+void RespondGen::predict(const Instance& input, vector<string>& resp_out) {
+	m_driver.decode(input.chars, resp_out);
 }
 
-void Normalizer::test(const string& testFile, const string& outputFile, const string& modelFile) {
+void RespondGen::test(const string& testFile, const string& outputFile, const string& modelFile) {
 	loadModelFile(modelFile);
 	vector<Instance> testInsts;
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
@@ -502,7 +396,7 @@ void Normalizer::test(const string& testFile, const string& outputFile, const st
 	Metric metric_test, metricnorm_test;
 	metric_test.reset(); metricnorm_test.reset();
 	for (int idx = 0; idx < testInsts.size(); idx++) {
-		predict(testInsts[idx], testInstResults[idx], testInstNormResults[idx]);
+		predict(testInsts[idx], testInstNormResults[idx]);
 		testInsts[idx].evaluate(testInstResults[idx], testInstNormResults[idx], metric_test, metricnorm_test);
 	}
 	std::cout << "test:" << std::endl;
@@ -526,11 +420,11 @@ void Normalizer::test(const string& testFile, const string& outputFile, const st
 }
 
 
-void Normalizer::loadModelFile(const string& inputModelFile) {
+void RespondGen::loadModelFile(const string& inputModelFile) {
 
 }
 
-void Normalizer::writeModelFile(const string& outputModelFile) {
+void RespondGen::writeModelFile(const string& outputModelFile) {
 
 }
 
@@ -556,12 +450,12 @@ int main(int argc, char* argv[]) {
 
 	ah.process(argc, argv);
 
-	Normalizer normalizer(memsize);
+	RespondGen respondGen(memsize);
 	if (bTrain) {
-		normalizer.train(trainFile, devFile, testFile, modelFile, optionFile);
+		respondGen.train(trainFile, devFile, testFile, modelFile, optionFile);
 	}
 	else {
-		normalizer.test(testFile, outputFile, modelFile);
+		respondGen.test(testFile, outputFile, modelFile);
 	}
 
 	//test(argv);

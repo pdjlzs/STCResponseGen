@@ -11,23 +11,17 @@
 struct AtomFeatures {
 	string str_1AC;
 	string str_2AC;
-	string str_2W;
 	int next_position;
 public:
-	IncLSTM1Builder* p_word_lstm;
-	IncLSTM1Builder* p_action_lstm;
-	LSTM1Builder* p_char_left_lstm;
-	LSTM1Builder* p_char_right_lstm;
+	IncLSTM1Builder* pre_words_lstm;
+	IncLSTM1Builder* pre_actions_lstm;
 public:
 	void clear(){
-		str_2W = "";
 		str_1AC = "";
 		str_2AC = "";
 		next_position = -1;
-		p_word_lstm = NULL;
-		p_action_lstm = NULL;
-		p_char_left_lstm = NULL;
-		p_char_right_lstm = NULL;
+		pre_words_lstm = NULL;
+		pre_actions_lstm = NULL;
 	}
 
 };

@@ -89,7 +89,7 @@ public:
 			clearValue(false); // decode
 		}
 
-		globalNodes.forward(this, pCharacters);
+		globalNodes.forward(this, pCharacters, pOpts);
 		//second step, build graph
 		static vector<CStateItem*> lastStates;
 		static CStateItem* pGenerator;
@@ -105,9 +105,8 @@ public:
 		beam.resize(pOpts->beam);
 
 		lastStates.clear();
-		start.setInput(pCharacters);
 		lastStates.push_back(&start);
-
+		
 		step = 0;
 		while (true){			
 			//prepare for the next

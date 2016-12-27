@@ -83,9 +83,9 @@ public:
     return cost;
   }
 
-  void decode(const std::vector<string>& sentence, vector<string>& result, vector<string>& normresult){
+  void decode(const std::vector<string>& sentence, vector<string>& resp_result){
 	  _pcg->forward(&sentence);
-	  predict(result, normresult);
+	  predict(resp_result);
   }
 
   void updateModel() {
@@ -193,9 +193,9 @@ private:
 	}	
 
 
-	void predict(vector<string>& result, vector<string>& normresult){
+	void predict(vector<string>& resp_result){
 		int step = _pcg->outputs.size();
-		_pcg->states[step - 1][0].getSegResults(result, normresult);
+		_pcg->states[step - 1][0].getSegResults(resp_result);
 	}
 
 

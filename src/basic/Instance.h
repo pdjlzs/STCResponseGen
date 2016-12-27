@@ -21,6 +21,10 @@ public:
 		return words.size();
 	}
 
+	int respon_wordsize() const{
+		return normwords.size();
+	}
+
 	int charsize() const {
 		return chars.size();
 	}
@@ -31,17 +35,19 @@ public:
 		normwords.clear();
 	}
 
-	void allocate(int length, int charLength) {
+	void allocate(int postlength, int responlength, int charLength) {
 		clear();
-		words.resize(length);
-		normwords.resize(length);
+		words.resize(postlength);
+		normwords.resize(responlength);
 		chars.resize(charLength);
 	}
 
 	void copyValuesFrom(const Instance& anInstance) {
-		allocate(anInstance.wordsize(), anInstance.charsize());
+		allocate(anInstance.wordsize(), anInstance.respon_wordsize(), anInstance.charsize());
 		for (int i = 0; i < anInstance.wordsize(); i++) {
 			words[i] = anInstance.words[i];
+		}
+		for (int i = 0; i < anInstance.respon_wordsize(); i++){
 			normwords[i] = anInstance.normwords[i];
 		}
 		for (int i = 0; i < anInstance.charsize(); i++) {
@@ -52,10 +58,10 @@ public:
 
 	void evaluate(const vector<string>& resulted_segs, const vector<string>& resulted_normsegs, Metric& eval, Metric& normeval) const {
 		unordered_set<string> golds;
-		getSegIndexes(words, golds);
+		getSegIndexes(normwords, golds);
 
 		unordered_set<string> preds;
-		getSegIndexes(resulted_segs, preds);
+		getSegIndexes(resulted_normsegs, preds);
 
 		unordered_set<string>::iterator iter;
 		eval.overall_label_count += golds.size();
@@ -66,6 +72,7 @@ public:
 			}
 		}
 
+		/*
 		unordered_set<string> goldnorms;
 		getNormSegIndexes(words, normwords, goldnorms);
 
@@ -78,7 +85,7 @@ public:
 			if (goldnorms.find(*iter) != goldnorms.end()) {
 				normeval.correct_label_count++;
 			}
-		}
+		}*/
 
 	}
 
@@ -100,9 +107,9 @@ public:
 			idx++;
 		}
 
-		if (idx != chars.size() || idy != segs.size()) {
+		/*if (idx != chars.size() || idy != segs.size()) {
 			std::cout << "error segs, please check" << std::endl;
-		}
+		}*/
 	}
 
 	void getNormSegIndexes(const vector<string>& segs, const vector<string>& normsegs, unordered_set<string>& segIndexes) const {
