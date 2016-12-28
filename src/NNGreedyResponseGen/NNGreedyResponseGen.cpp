@@ -189,6 +189,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	initialActionWordMap();
 
+	m_driver._hyperparams.setRequared(m_options);
+
 	vector<Instance> trainInsts, devInsts, testInsts;
 	std::cout << "Loading train, dev, test corpus ... " << std::endl;
 	m_pipe.readInstances(trainFile, trainInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
@@ -201,8 +203,6 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	for (int idx = 0; idx < m_options.testFiles.size(); idx++) {
 		m_pipe.readInstances(m_options.testFiles[idx], otherInsts[idx], m_driver._hyperparams.maxlength, m_options.maxInstance);
 	}
-
-	m_driver._hyperparams.setRequared(m_options);
 
 	createAlphabet(trainInsts);
 
