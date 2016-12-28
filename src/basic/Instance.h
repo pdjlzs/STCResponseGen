@@ -17,51 +17,51 @@ public:
 	~Instance() {
 	}
 
-	int wordsize() const {
-		return words.size();
+	int postWordsize() const {
+		return post_words.size();
 	}
 
-	int respon_wordsize() const{
-		return normwords.size();
+	int responWordsize() const{
+		return respon_words.size();
 	}
 
-	int charsize() const {
-		return chars.size();
+	int responCharsize() const {
+		return respon_chars.size();
 	}
 
 	void clear() {
-		words.clear();
-		chars.clear();
-		normwords.clear();
+		post_words.clear();
+		respon_words.clear();
+		respon_chars.clear();
 	}
 
 	void allocate(int postlength, int responlength, int charLength) {
 		clear();
-		words.resize(postlength);
-		normwords.resize(responlength);
-		chars.resize(charLength);
+		post_words.resize(postlength);
+		respon_words.resize(responlength);
+		respon_chars.resize(charLength);
 	}
 
 	void copyValuesFrom(const Instance& anInstance) {
-		allocate(anInstance.wordsize(), anInstance.respon_wordsize(), anInstance.charsize());
-		for (int i = 0; i < anInstance.wordsize(); i++) {
-			words[i] = anInstance.words[i];
+		allocate(anInstance.postWordsize(), anInstance.responWordsize(), anInstance.responCharsize());
+		for (int i = 0; i < anInstance.postWordsize(); i++) {
+			post_words[i] = anInstance.post_words[i];
 		}
-		for (int i = 0; i < anInstance.respon_wordsize(); i++){
-			normwords[i] = anInstance.normwords[i];
+		for (int i = 0; i < anInstance.responWordsize(); i++){
+			respon_words[i] = anInstance.respon_words[i];
 		}
-		for (int i = 0; i < anInstance.charsize(); i++) {
-			chars[i] = anInstance.chars[i];
+		for (int i = 0; i < anInstance.responCharsize(); i++) {
+			respon_chars[i] = anInstance.respon_chars[i];
 		}
 	}
 
 
-	void evaluate(const vector<string>& resulted_segs, const vector<string>& resulted_normsegs, Metric& eval, Metric& normeval) const {
+	void evaluate(const vector<string>& resulted_respon, Metric& eval) const {
 		unordered_set<string> golds;
-		getSegIndexes(normwords, golds);
+		getSegIndexes(respon_words, golds);
 
 		unordered_set<string> preds;
-		getSegIndexes(resulted_normsegs, preds);
+		getSegIndexes(resulted_respon, preds);
 
 		unordered_set<string>::iterator iter;
 		eval.overall_label_count += golds.size();
@@ -72,34 +72,19 @@ public:
 			}
 		}
 
-		/*
-		unordered_set<string> goldnorms;
-		getNormSegIndexes(words, normwords, goldnorms);
-
-		unordered_set<string> prednorms;
-		getNormSegIndexes(resulted_segs, resulted_normsegs, prednorms);
-
-		normeval.overall_label_count += goldnorms.size();
-		normeval.predicated_label_count += prednorms.size();
-		for (iter = prednorms.begin(); iter != prednorms.end(); iter++) {
-			if (goldnorms.find(*iter) != goldnorms.end()) {
-				normeval.correct_label_count++;
-			}
-		}*/
-
 	}
 
-	void getSegIndexes(const vector<string>& segs, unordered_set<string>& segIndexes) const {
-		segIndexes.clear();
+	void getSegIndexes(const vector<string>& respon, unordered_set<string>& responIndexes) const {
+		responIndexes.clear();
 		int idx = 0, idy = 0;
 		string curWord = "";
 		int beginId = 0;
-		while (idx < chars.size() && idy < segs.size()) {
-			curWord = curWord + chars[idx];
-			if (curWord.length() == segs[idy].length()) {
+		while (idx < respon_chars.size() && idy < respon.size()) {
+			curWord = curWord + respon_chars[idx];
+			if (curWord.length() == respon[idy].length()) {
 				stringstream ss;
 				ss << "[" << beginId << "," << idx << "]";
-				segIndexes.insert(ss.str());
+				responIndexes.insert(ss.str());
 				idy++;
 				beginId = idx + 1;
 				curWord = "";
@@ -107,18 +92,19 @@ public:
 			idx++;
 		}
 
-		/*if (idx != chars.size() || idy != segs.size()) {
+		/*if (idx != respon_chars.size() || idy != segs.size()) {
 			std::cout << "error segs, please check" << std::endl;
 		}*/
 	}
 
+	/*
 	void getNormSegIndexes(const vector<string>& segs, const vector<string>& normsegs, unordered_set<string>& segIndexes) const {
 		segIndexes.clear();
 		int idx = 0, idy = 0;
 		string curWord = "";
 		int beginId = 0;
-		while (idx < chars.size() && idy < segs.size()) {
-			curWord = curWord + chars[idx];
+		while (idx < respon_chars.size() && idy < segs.size()) {
+			curWord = curWord + respon_chars[idx];
 			if (curWord.length() == segs[idy].length()) {
 				stringstream ss;
 				ss << normsegs[idy] + "[" << beginId << "," << idx << "]";
@@ -130,15 +116,16 @@ public:
 			idx++;
 		}
 
-		if (idx != chars.size() || idy != segs.size()) {
+		if (idx != respon_chars.size() || idy != segs.size()) {
 			std::cout << "error segs, please check" << std::endl;
 		}
 	}
+	*/
 
 public:
-	vector<string> words;
-	vector<string> normwords;
-	vector<string> chars;
+	vector<string> post_words;
+	vector<string> respon_words;
+	vector<string> respon_chars;
 };
 
 #endif

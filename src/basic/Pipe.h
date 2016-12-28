@@ -52,13 +52,13 @@ public:
       m_jstWriter->finishWriting();
   }
 
-  int outputAllInstances(const string& m_strOutFile, const vector<Instance >& vecInstances, const vector<vector<string> >& vecOutputs, const vector<vector<string> >& vecNormOutputs) {
+  int outputAllInstances(const string& m_strOutFile, const vector<Instance >& vecInstances, const vector<vector<string> >& vecOutputs) {
 
     initOutputFile(m_strOutFile.c_str());
     static int instNum;
     instNum = vecInstances.size();
     for (int idx = 0; idx < instNum; idx++) {
-      if (0 != m_jstWriter->write(&(vecInstances[idx]), vecOutputs[idx], vecNormOutputs[idx]))
+      if (0 != m_jstWriter->write(&(vecInstances[idx]), vecOutputs[idx]))
         return -1;
     }
 
@@ -75,7 +75,7 @@ public:
 
   Instance* nextInstance() {
     Instance *pInstance = m_jstReader->getNext();
-    if (!pInstance || pInstance->words.empty())
+    if (!pInstance || pInstance->post_words.empty())
       return 0;
 
     return pInstance;
@@ -90,7 +90,7 @@ public:
 
     while (pInstance) {
 
-      if (pInstance->charsize() < max_sentence_size) {
+      if (pInstance->post_words.size() < max_sentence_size) {
         Instance trainInstance;
         trainInstance.copyValuesFrom(*pInstance);
         vecInstances.push_back(trainInstance);

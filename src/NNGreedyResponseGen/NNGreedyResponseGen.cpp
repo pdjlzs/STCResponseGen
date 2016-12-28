@@ -5,7 +5,7 @@
  *      Author: mszhang
  */
 
-#include "NNRespondGen.h"
+#include "NNGreedyResponseGen.h"
 
 #include "Argument_helper.h"
 
@@ -20,6 +20,7 @@ RespondGen::~RespondGen() {
 }
 
 int RespondGen::initialActionWordMap() {
+	cout << "Creating candidate action alphabet..." << endl;
 	m_driver._hyperparams.word_map.clear();
 	//m_driver._hyperparams.reverse_word_map.clear();
 	if (m_options.mapFile == "") {
@@ -47,14 +48,15 @@ int RespondGen::initialActionWordMap() {
 			}
 			if (vecInfo.size() - 1 > maxCandidate) maxCandidate = vecInfo.size() - 1;
 		}
-		if ((dic_num + 1) % 10000 == 0) {
+		if ((dic_num + 1) % m_options.verboseIter == 0) {
 			cout << dic_num + 1 << " ";
-			if ((dic_num + 1) % (40 * 10000) == 0)
+			if ((dic_num + 1) % (40 * m_options.verboseIter) == 0)
 				cout << std::endl;
 			cout.flush();
 		}
 		dic_num++;
 	}
+	cout << std::endl;
 	inf.close();
 	m_driver._hyperparams.action_num = CAction::NO_ACTION + maxCandidate;
 }
@@ -65,51 +67,48 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 
 	int numInstance = vecInsts.size();
 
-	unordered_map<string, int> word_stat;
-
 	assert(numInstance > 0);
 	int count = 0;
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance &instance = vecInsts[numInstance];
-		for (int idx = 0; idx < instance.wordsize(); idx++) {
-			word_stat[normalize_to_lowerwithdigit(instance.words[idx])]++;
+		for (int idx = 0; idx < instance.postWordsize(); idx++) {
+			m_driver._hyperparams.word_stat[normalize_to_lowerwithdigit(instance.post_words[idx])]++;
 		}
 	}
-	word_stat[nullkey] = m_options.wordCutOff + 1;
-	word_stat[unknownkey] = m_options.wordCutOff + 1;
-	m_driver._modelparams.words.initial(word_stat, 0);
+	m_driver._hyperparams.word_stat[nullkey] = m_options.wordCutOff + 1;
+	m_driver._hyperparams.word_stat[unknownkey] = m_options.wordCutOff + 1;
 
 	if (!m_options.wordEmbFineTune && m_options.wordEmbFile != "") {
-		m_driver._modelparams.embeded_words.initial(m_options.wordEmbFile);
+		m_driver._modelparams.word_ext_alphas.initial(m_options.wordEmbFile);
 	}
-	if (!m_driver._modelparams.embeded_words.is_fixed()) {
-		m_driver._modelparams.embeded_words.initial(word_stat, m_options.wordCutOff);
+	if (!m_driver._modelparams.word_ext_alphas.is_fixed()) {
+		m_driver._modelparams.word_ext_alphas.initial(m_driver._hyperparams.word_stat, m_options.wordCutOff);
 	}
 
+	m_driver._modelparams.word_alpha.initial(m_driver._hyperparams.word_stat, m_options.wordCutOff);
 	unordered_map<string, int> action_stat;
 
 	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
-	vector<string> output, normoutput;
+	vector<string> respon_output;
 	CAction answer;
-	Metric eval, evalnorm;
+	Metric eval;
 	int actionNum;
-	eval.reset(); evalnorm.reset();
+	eval.reset();
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance &instance = vecInsts[numInstance];
 		actionNum = 0;
 		state[actionNum].clear();
-		//state[actionNum].setInput(&instance.words);
-		action_stat[state[actionNum]._lastAction.typestr()]++;
+		action_stat[state[actionNum]._lastAction.str()]++;
 		while (!state[actionNum].IsTerminated()) {
-			state[actionNum].getGoldAction(instance.normwords, answer);
+			state[actionNum].getGoldAction(instance.respon_words, answer);
 			state[actionNum].move(&(state[actionNum + 1]), answer);
 			actionNum++;
 			action_stat[answer.str()]++;
 		}
 
-		state[actionNum].getSegResults(normoutput);
+		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(output, normoutput, eval, evalnorm);
+		instance.evaluate(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -127,23 +126,26 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	}
 
 	action_stat[nullkey] = 1;
-	m_driver._modelparams.embeded_actions.initial(action_stat, 0);
+	action_stat[unknownkey] = 1;
+	m_driver._modelparams.action_alpha.initial(action_stat, 0);
 
 	cout << numInstance << " " << endl;
-	cout << "Total word num: " << word_stat.size() << endl;
-	cout << "Remain word num: " << m_driver._modelparams.words.size() << endl;
+	cout << "Train file total word num: " << m_driver._hyperparams.word_stat.size() << endl;
+	cout << "Fine tune embedding alphabet remain word num: " << m_driver._modelparams.word_alpha.size() << endl;
+	cout << "External embedding alphabet remain word num: " << m_driver._modelparams.word_ext_alphas.size() << endl;
 
 	return 0;
 }
 
 void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<CAction> >& vecActions) {
+	std::cout << "Get gold actions for traing ..." << endl;
 	vecActions.clear();
 
-	Metric eval, evalnorm;
+	Metric eval;
 	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
-	vector<string> output, normoutput;
+	vector<string> respon_output;
 	CAction answer;
-	eval.reset(); evalnorm.reset();
+	eval.reset();
 	static int numInstance, actionNum;
 	vecActions.resize(vecInsts.size());
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
@@ -151,17 +153,16 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 
 		actionNum = 0;
 		state[actionNum].clear();
-		//state[actionNum].setInput(&instance.words);
 		while (!state[actionNum].IsTerminated()) {
-			state[actionNum].getGoldAction(instance.normwords, answer);
+			state[actionNum].getGoldAction(instance.respon_words, answer);
 			vecActions[numInstance].push_back(answer);
 			state[actionNum].move(&state[actionNum + 1], answer);
 			actionNum++;
 		}
 
-		state[actionNum].getSegResults(normoutput);
+		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(output, normoutput, eval, evalnorm);
+		instance.evaluate(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -177,6 +178,7 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 		if (m_options.maxInstance > 0 && numInstance == m_options.maxInstance)
 			break;
 	}
+	cout << endl;
 }
 
 void RespondGen::train(const string& trainFile, const string& devFile, const string& testFile, const string& modelFile, const string& optionFile) {
@@ -188,6 +190,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	initialActionWordMap();
 
 	vector<Instance> trainInsts, devInsts, testInsts;
+	std::cout << "Loading train, dev, test corpus ... " << std::endl;
 	m_pipe.readInstances(trainFile, trainInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
 	if (devFile != "")
 		m_pipe.readInstances(devFile, devInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
@@ -201,20 +204,22 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	createAlphabet(trainInsts);
 
+
 	//lookup table setting
 	bool initial_successed = false;
 	if (m_options.wordEmbFile != "") {
-		initial_successed = m_driver._modelparams.word_table.initial(&m_driver._modelparams.embeded_words, m_options.wordEmbFile, m_options.wordEmbFineTune, m_options.wordEmbNormalize);
+		initial_successed = m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbFile, m_options.wordEmbFineTune);
 		if (initial_successed) {
-			m_options.wordEmbSize = m_driver._modelparams.word_table.nDim;
+			m_options.wordEmbSize = m_driver._modelparams.word_ext_table.nDim;
 		}
 	}
 	if (!initial_successed) {
 		m_options.wordEmbFineTune = true;
-		m_driver._modelparams.word_table.initial(&m_driver._modelparams.embeded_words, m_options.wordEmbSize, true);
+		m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbSize, true);
 	}
 
-	m_driver._modelparams.action_table.initial(&m_driver._modelparams.embeded_actions, m_options.actionEmbSize, true);
+	m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
+	m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
 	m_driver._hyperparams.setRequared(m_options);
 	m_driver.initial();
 
@@ -228,15 +233,16 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	for (int i = 0; i < inputSize; ++i)
 		indexes.push_back(i);
 
-	static Metric eval, metric_dev, metric_test, metricnorm_dev, metricnorm_test;
+	static Metric eval_train, eval_dev, eval_test;
 
-	int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
-	int oneIterMaxRound = (inputSize + m_options.batchSize - 1) / m_options.batchSize;
+	//int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
+	int maxIter = m_options.maxIter;
+	//int oneIterMaxRound = (inputSize + m_options.batchSize - 1) / m_options.batchSize;
 	std::cout << "maxIter = " << maxIter << std::endl;
 	int devNum = devInsts.size(), testNum = testInsts.size();
 
-	static vector<vector<string> > decodeInstResults, decodeInstNormResults;
-	static vector<string> curDecodeInst, curDecodeNormInst;
+	static vector<vector<string> > decodeInstResults;
+	static vector<string> curDecodeInst;
 	static bool bCurIterBetter;
 	static vector<vector<string> > subInstances;
 	static vector<vector<CAction> > subInstGoldActions;
@@ -251,43 +257,43 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		bool bEvaluate = false;
 
 		if (m_options.batchSize == 1) {
-			eval.reset();
+			eval_train.reset();
 			bEvaluate = true;
 			for (int idy = 0; idy < inputSize; idy++) {
 				subInstances.clear();
 				subInstGoldActions.clear();
-				subInstances.push_back(trainInsts[indexes[idy]].words);
+				subInstances.push_back(trainInsts[indexes[idy]].post_words);
 				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
 
 				double cost = m_driver.train(subInstances, subInstGoldActions);
 
-				eval.overall_label_count += m_driver._eval.overall_label_count;
-				eval.correct_label_count += m_driver._eval.correct_label_count;
+				eval_train.overall_label_count += m_driver._eval.overall_label_count;
+				eval_train.correct_label_count += m_driver._eval.correct_label_count;
 
 				if ((idy + 1) % (m_options.verboseIter * 10) == 0) {
-					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval.getAccuracy() << std::endl;
+					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
 				}
 				m_driver.updateModel();
 			}
-			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval.getAccuracy() << std::endl;
+			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
 		}
 		else {
-			if (iter == 0)eval.reset();
+			if (iter == 0)eval_train.reset();
 			subInstances.clear();
 			subInstGoldActions.clear();
 			for (int idy = 0; idy < m_options.batchSize; idy++) {
-				subInstances.push_back(trainInsts[indexes[idy]].words);
+				subInstances.push_back(trainInsts[indexes[idy]].post_words);
 				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
 
 			}
 			double cost = m_driver.train(subInstances, subInstGoldActions);
 
-			eval.overall_label_count += m_driver._eval.overall_label_count;
-			eval.correct_label_count += m_driver._eval.correct_label_count;
+			eval_train.overall_label_count += m_driver._eval.overall_label_count;
+			eval_train.correct_label_count += m_driver._eval.correct_label_count;
 
 			if ((iter + 1) % (m_options.verboseIter) == 0) {
-				std::cout << "current: " << iter + 1 << ", Cost = " << cost << ", Correct(%) = " << eval.getAccuracy() << std::endl;
-				eval.reset();
+				std::cout << "current: " << iter + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
+				eval_train.reset();
 				bEvaluate = true;
 			}
 
@@ -300,24 +306,21 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			bCurIterBetter = false;
 			if (!m_options.outBest.empty()) {
 				decodeInstResults.clear();
-				decodeInstNormResults.clear();
 			}
-			metric_dev.reset(); metricnorm_dev.reset();
+			eval_dev.reset();
 			for (int idx = 0; idx < devInsts.size(); idx++) {
-				predict(devInsts[idx], curDecodeNormInst);
-				devInsts[idx].evaluate(curDecodeInst, curDecodeNormInst, metric_dev, metricnorm_dev);
+				predict(devInsts[idx], curDecodeInst);
+				devInsts[idx].evaluate(curDecodeInst, eval_dev);
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.push_back(curDecodeInst);
-					decodeInstNormResults.push_back(curDecodeNormInst);
 				}
 			}
 			std::cout << "Dev finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
 			std::cout << "dev:" << std::endl;
-			metric_dev.print();
-			metricnorm_dev.print();
+			eval_dev.print();
 
-			if (!m_options.outBest.empty() && metric_dev.getAccuracy() > bestFmeasure) {
-				m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults, decodeInstNormResults);
+			if (!m_options.outBest.empty() && eval_dev.getAccuracy() > bestFmeasure) {
+				m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
 				bCurIterBetter = true;
 			}
 
@@ -326,24 +329,21 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				std::cout << "Test start." << std::endl;
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.clear();
-					decodeInstNormResults.clear();
 				}
-				metric_test.reset(); metricnorm_test.reset();
+				eval_test.reset();
 				for (int idx = 0; idx < testInsts.size(); idx++) {
-					predict(testInsts[idx], curDecodeNormInst);
-					testInsts[idx].evaluate(curDecodeInst, curDecodeNormInst, metric_test, metricnorm_test);
+					predict(testInsts[idx], curDecodeInst);
+					testInsts[idx].evaluate(curDecodeInst, eval_test);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
-						decodeInstNormResults.push_back(curDecodeNormInst);
 					}
 				}
 				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
 				std::cout << "test:" << std::endl;
-				metric_test.print();
-				metricnorm_test.print();
+				eval_test.print();
 
 				if (!m_options.outBest.empty() && bCurIterBetter) {
-					m_pipe.outputAllInstances(testFile + m_options.outBest, testInsts, decodeInstResults, decodeInstNormResults);
+					m_pipe.outputAllInstances(testFile + m_options.outBest, testInsts, decodeInstResults);
 				}
 			}
 
@@ -352,31 +352,29 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				std::cout << "processing " << m_options.testFiles[idx] << std::endl;
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.clear();
-					decodeInstNormResults.clear();
 				}
-				metric_test.reset(); metricnorm_test.reset();
+				eval_test.reset();
 				for (int idy = 0; idy < otherInsts[idx].size(); idy++) {
-					predict(otherInsts[idx][idy], curDecodeNormInst);
-					otherInsts[idx][idy].evaluate(curDecodeInst, curDecodeNormInst, metric_test, metricnorm_test);
+					predict(otherInsts[idx][idy], curDecodeInst);
+					otherInsts[idx][idy].evaluate(curDecodeInst, eval_test);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
-						decodeInstNormResults.push_back(curDecodeNormInst);
+						decodeInstResults.push_back(curDecodeInst);
 					}
 				}
 				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
 				std::cout << "test:" << std::endl;
-				metric_test.print();
-				metricnorm_test.print();
+				eval_test.print();
 
 				if (!m_options.outBest.empty() && bCurIterBetter) {
-					m_pipe.outputAllInstances(m_options.testFiles[idx] + m_options.outBest, otherInsts[idx], decodeInstResults, decodeInstNormResults);
+					m_pipe.outputAllInstances(m_options.testFiles[idx] + m_options.outBest, otherInsts[idx], decodeInstResults);
 				}
 			}
 
 
-			if (metric_dev.getAccuracy() > bestFmeasure) {
+			if (eval_dev.getAccuracy() > bestFmeasure) {
 				std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
-				bestFmeasure = metric_dev.getAccuracy();
+				bestFmeasure = eval_dev.getAccuracy();
 				writeModelFile(modelFile);
 			}
 		}
@@ -384,7 +382,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 }
 
 void RespondGen::predict(const Instance& input, vector<string>& resp_out) {
-	m_driver.decode(input.chars, resp_out);
+	m_driver.decode(input.post_words, resp_out);
 }
 
 void RespondGen::test(const string& testFile, const string& outputFile, const string& modelFile) {
@@ -393,15 +391,14 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
 
 	vector<vector<string> > testInstResults(testInsts.size()), testInstNormResults(testInsts.size());
-	Metric metric_test, metricnorm_test;
-	metric_test.reset(); metricnorm_test.reset();
+	Metric eval_test;
+	eval_test.reset();
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstNormResults[idx]);
-		testInsts[idx].evaluate(testInstResults[idx], testInstNormResults[idx], metric_test, metricnorm_test);
+		testInsts[idx].evaluate(testInstNormResults[idx], eval_test);
 	}
 	std::cout << "test:" << std::endl;
-	metric_test.print();
-	metricnorm_test.print();
+	eval_test.print();
 
 	std::ofstream os(outputFile.c_str());
 

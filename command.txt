@@ -1,5 +1,7 @@
 cmake .. -DEIGEN3_INCLUDE_DIR=/c/eigen/ -DN3L_INCLUDE_DIR=/d/workspace/LibN3L-2.0/
 cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/
 
-
--l -train D:\data\STCRG\post_response.pair -dev D:\data\STCRG\post_response.pair -test D:\data\STCRG\test -option D:\data\STCRG\option.lstm16
+#Windows
+-l -train D:\data\STCRG\post_response.pair -dev D:\data\STCRG\post_response.pair -test D:\data\STCRG\test -option D:\data\STCRG\optionx86.lstm16
+#linux
+-l -train ~/workspace/data/STCRG/post_response.pair -dev ~/workspace/data/STCRG/post_response.pair -test ~/workspace/data/STCRG/test -option ~/workspace/data/STCRG/option_linux.lstm16

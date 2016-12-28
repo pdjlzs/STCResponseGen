@@ -46,6 +46,7 @@ public:
 	}
 
 	void initial(ModelParams& params, HyperParams& hyparams, AlignedMemoryPool* mem) {
+		_nextscores.resize(hyparams);
 		_nextscores.initial(params, hyparams, mem);
 	}
 
@@ -77,14 +78,17 @@ public:
 		next->_word = rword;
 		next->_prevState = this;
 		next->_next_index = _next_index + 1;
-		next->_word_count = _word_count + 1;
+		if (rword == "-end-")
+			next->_word_count = _word_count;
+		else
+			next->_word_count = _word_count + 1;
 		next->_lastAction.set(CAction::SEP, rword);
 	}
 
 	//only assign context
 	void finish(CStateItem* next, const string& rword){
 		next->_word = rword;
-		next->_prevState = this;
+		next->_prevState = _prevState;
 		next->_next_index = _next_index + 1;
 		next->_word_count = _word_count;
 		next->_lastAction.set(CAction::FIN, rword);
@@ -131,7 +135,7 @@ public:
 		}
 
 		const CStateItem *prevState = this->_prevState;
-		while (prevState != 0 && prevState->_word != "") {
+		while (prevState != 0 && prevState->_word != "-end-" && prevState->_word != "" && prevState->_word != "-start-") {
 			resp_words.insert(resp_words.begin(), prevState->_word);
 			prevState = prevState->_prevState;
 		}
@@ -142,8 +146,13 @@ public:
 	}
 
 	void getGoldAction(const std::vector<std::string>& resp_words, CAction& ac) const {
+		if (_next_index > resp_words.size()){
+			ac.set(CAction::FIN, "");
+			return;
+		}
+
 		if (_next_index == resp_words.size()){
-			ac.set(CAction::FIN, "-end-");
+			ac.set(CAction::SEP, "-end-");
 			return;
 		}
 
@@ -158,25 +167,20 @@ public:
 	}
 
 
-	void getCandidateActions(vector<CAction> & actions, HyperParams* pHyparams) const{
+	void getCandidateActions(vector<CAction> & actions, int post_word_size, HyperParams* opts) const{
 		actions.clear();
 		static CAction ac;
-		unordered_map<string, vector<string> >& word_map = pHyparams->word_map;
-		/*
-		if (_next_index == 0){
-			vector<string>& startCandi = word_map["-start-"];
-			for (int idy = 0; idy < startCandi.size(); idy++) {
-				ac.set(CAction::SEP, startCandi[idy]);
-				actions.push_back(ac);
-			}
-		}
-		*/
+		unordered_map<string, vector<string> >& word_map = opts->word_map;
 		if (_word == "-end-"){
 			ac.set(CAction::FIN, "");
 			actions.push_back(ac);
 		}
 		else if (_word == ""){
 			ac.set(CAction::IDLE, "");
+			actions.push_back(ac);
+		}
+		else if (_next_index >= opts->maxlength){
+			ac.set(CAction::SEP, "-end-");
 			actions.push_back(ac);
 		}
 		else {
@@ -220,20 +224,24 @@ public:
 
 public:
 	inline void computeNextScore(Graph *cg, const vector<CAction>& acs){
+		/*
 		if (_bStart){
-			_nextscores.forward(cg, acs, _atomFeat, NULL);
+		_nextscores.forward(cg, acs, _atomFeat, NULL);
 		}
 		else{
-			_nextscores.forward(cg, acs, _atomFeat, _score);
-		}
+		_nextscores.forward(cg, acs, _atomFeat, _score);
+		}*/
+		_nextscores.forward(cg, acs, _atomFeat);
+
 	}
 
-	inline void prepare(HyperParams* hyper_params, ModelParams* model_params, GlobalNodes* global_nodes){
+	inline void prepare(HyperParams* hyper_params, ModelParams* model_params, GlobalNodes& global_nodes){
 
-		_atomFeat.str_1AC = _lastAction.typestr();
-		_atomFeat.str_2AC = _prevState == 0 ? nullkey : _prevState->_lastAction.typestr();
+		_atomFeat.str_1AC = _lastAction.str();
+		_atomFeat.str_2AC = _prevState == 0 ? nullkey : _prevState->_lastAction.str();
 		_atomFeat.pre_actions_lstm = _prevState == 0 ? NULL : &(_prevState->_nextscores.action_lstm);
-		_atomFeat.pre_words_lstm = _prevState == 0 ? global_nodes->word_lstm : &(_prevState->_nextscores.word_lstm);
+		_atomFeat.post_words_left_lstm = global_nodes.word_left_lstm;
+		_atomFeat.post_words_right_lstm = global_nodes.word_right_lstm;
 		_atomFeat.next_position = _next_index;
 	}
 };

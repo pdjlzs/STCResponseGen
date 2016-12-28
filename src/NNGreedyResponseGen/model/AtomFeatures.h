@@ -13,14 +13,16 @@ struct AtomFeatures {
 	string str_2AC;
 	int next_position;
 public:
-	IncLSTM1Builder* pre_words_lstm;
+	PNode post_words_left_lstm;
+	PNode post_words_right_lstm;
 	IncLSTM1Builder* pre_actions_lstm;
 public:
 	void clear(){
 		str_1AC = "";
 		str_2AC = "";
 		next_position = -1;
-		pre_words_lstm = NULL;
+		post_words_left_lstm = NULL;
+		post_words_right_lstm = NULL;
 		pre_actions_lstm = NULL;
 	}
 

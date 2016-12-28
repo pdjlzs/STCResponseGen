@@ -48,7 +48,7 @@ public:
 			_word = word;
 		}
 		else if (_code == FIN) {
-			_word = "-end-";
+			_word = word;
 		}
 		else {
 			_word = "";
@@ -66,13 +66,13 @@ public:
 	inline bool isFinish() const { return _code == FIN; }
 
 public:
-	inline std::string typestr() const {
+	/*inline std::string typestr() const {
 		if (isNone()) { return "NONE"; }
 		if (isSeparate()) { return "SEP"; }
 		if (isIdle()) { return "IDLE"; }
 		if (isFinish()) { return "FIN"; }
 		return "NONE";
-	}
+	}*/
 	
 	inline std::string str() const {
 		if (isNone()) { return "NONE"; }

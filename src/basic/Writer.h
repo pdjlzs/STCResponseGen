@@ -34,7 +34,7 @@ public:
 	}
 
 	virtual int write(const Instance *pInstance) = 0;
-	virtual int write(const Instance *pInstance, const vector<string> &curWords, const vector<string> &curNormWords) = 0;
+	virtual int write(const Instance *pInstance, const vector<string> &curWords) = 0;
 protected:
 	ofstream m_outf;
 };

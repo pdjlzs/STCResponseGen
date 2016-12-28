@@ -15,29 +15,29 @@ public:
 	{
 	  if (!m_outf.is_open()) return -1;
 
-	  for (int i = 0; i < pInstance->wordsize(); ++i) {
-		  m_outf << pInstance->words[i] << " ";
+	  for (int i = 0; i < pInstance->postWordsize(); ++i) {
+		  m_outf << pInstance->post_words[i] << " ";
 	  }
 	  m_outf << endl;
-	  for (int i = 0; i < pInstance->wordsize(); ++i) {
-	    m_outf << pInstance->normwords[i] << " ";
+	  for (int i = 0; i < pInstance->responWordsize(); ++i) {
+	    m_outf << pInstance->respon_words[i] << " ";
 	  }
 	  m_outf << endl;
 	  m_outf << endl;
 	  return 0;
 	}
 
-  int write(const Instance *pInstance, const vector<string> &curWords, const vector<string> &curNormWords)
+  int write(const Instance *pInstance, const vector<string> &curWords)
   {
     if (!m_outf.is_open()) return -1;
+    for (int i = 0; i < pInstance->postWordsize(); ++i) {
+      m_outf << pInstance->post_words[i] << " ";
+    }
+    m_outf << endl;
 	for (int i = 0; i < curWords.size(); ++i) {
 		m_outf << curWords[i] << " ";
 	}
 	m_outf << endl;
-    for (int i = 0; i < curWords.size(); ++i) {
-      m_outf << curNormWords[i] << " ";
-    }
-    m_outf << endl;
 	m_outf << endl;
     return 0;
   }

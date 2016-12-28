@@ -70,7 +70,7 @@ public:
     dtype cost = 0.0;
 	int num = sentences.size();
 	for (int idx = 0; idx < num; idx++) {
-		_pcg->forward(&sentences[idx], &goldACs[idx]);
+		_pcg->forward(sentences[idx], &goldACs[idx]);
 
 		int seq_size = sentences[idx].size();
 		_eval.overall_label_count += seq_size + 1;
@@ -84,7 +84,7 @@ public:
   }
 
   void decode(const std::vector<string>& sentence, vector<string>& resp_result){
-	  _pcg->forward(&sentence);
+	  _pcg->forward(sentence);
 	  predict(resp_result);
   }
 
@@ -195,7 +195,7 @@ private:
 
 	void predict(vector<string>& resp_result){
 		int step = _pcg->outputs.size();
-		_pcg->states[step - 1][0].getSegResults(resp_result);
+		_pcg->states[step - 1].getSegResults(resp_result);
 	}
 
 

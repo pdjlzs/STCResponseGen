@@ -9,11 +9,11 @@ using namespace std;
 
 struct HyperParams{
 	//required
-	int beam;
 	int maxlength;
 	int action_num;
 	dtype delta;
 	unordered_map<string, vector<string> > word_map;//for actions
+	unordered_map<string, int> word_stat;
 
 
 	dtype nnRegular; // for optimization
@@ -21,23 +21,28 @@ struct HyperParams{
 	dtype adaEps; // for optimization
 	dtype dropProb;
 
-	bool word_tune;
-	int word_dim;
+	//must assign
 	int word_context;
-	int word_hidden_dim;
-	int word_lstm_dim;
+	int word_hiddensize;
+	int word_rnnhiddensize;
 
 	int action_dim;
+	int action_hiddensize;
+	int action_rnnhiddensize;
 
-	int action_hidden_dim;
+	int state_hiddensize;
 
-	int action_lstm_dim;
+	int unk_strategy;
 
-	int sep_hidden_dim;
-
+	//auto generare
+	int word_dim;
+	int word_represent_dim;
+	int word_window;
+	int word_input2conv;
+	int state_represent_dim;
 public:
 	HyperParams(){
-		maxlength = max_sentence_clength + 1;
+		//maxlength = max_sentence_clength + 1;
 		bAssigned = false;
 	}
 
@@ -45,7 +50,7 @@ public:
 	void setRequared(Options& opt){
 		//please specify dictionary outside
 		//please sepcify char_dim, word_dim and action_dim outside.
-		beam = opt.beam;
+		maxlength = opt.maxLength;
 		delta = opt.delta;
 		bAssigned = true;
 
@@ -54,18 +59,17 @@ public:
 		adaEps = opt.adaEps;
 		dropProb = opt.dropProb;
 
-		word_tune = opt.wordEmbFineTune;
-		word_dim = opt.wordEmbSize;
 		word_context = opt.wordcontext;
-		word_hidden_dim = opt.wordHiddenSize;
-		word_lstm_dim = opt.wordRNNHiddenSize;
+		word_hiddensize = opt.wordHiddenSize;
+		word_rnnhiddensize = opt.wordRNNHiddenSize;
+
 		action_dim = opt.actionEmbSize;
+		action_hiddensize = opt.actionHiddenSize;
+		action_rnnhiddensize = opt.actionRNNHiddenSize;
 
-		action_hidden_dim = opt.actionHiddenSize;
+		state_hiddensize = opt.state_hiddensize;
 
-		action_lstm_dim = opt.actionRNNHiddenSize;
-
-		sep_hidden_dim = opt.sepHiddenSize;
+		unk_strategy = 1;
 	}
 
 	void clear(){

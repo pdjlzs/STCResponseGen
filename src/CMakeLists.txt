@@ -3,6 +3,6 @@ include_directories(
   basic
 )
 
-add_subdirectory(NNRespondGen)
+add_subdirectory(NNGreedyResponseGen)
 
 

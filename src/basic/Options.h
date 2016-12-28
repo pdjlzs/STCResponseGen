@@ -24,8 +24,6 @@ public:
 	dtype delta;
 	int beam;
 
-	int sepHiddenSize;
-
 	string wordEmbFile;
 	int wordEmbSize;
 	bool wordEmbFineTune;
@@ -36,9 +34,10 @@ public:
 	string mapFile;
 
 	int actionEmbSize;
-	int actionNgram;
 	int actionHiddenSize;
 	int actionRNNHiddenSize;
+
+	int state_hiddensize;
 
 	int verboseIter;
 	bool train;
@@ -46,6 +45,7 @@ public:
 	vector<string> testFiles;
 	string outBest;
 
+	int maxLength;
 
 	Options() {
 		wordCutOff = 0;
@@ -59,7 +59,7 @@ public:
 		delta = 0.2;
 		beam = 16;
 
-		sepHiddenSize = 100;
+		state_hiddensize = 100;
 
 		wordEmbSize = 50;
 		wordHiddenSize = 150;
@@ -71,7 +71,6 @@ public:
 		mapFile = "";
 
 		actionEmbSize = 20;
-		actionNgram = 2;
 		actionHiddenSize = 30;
 		actionRNNHiddenSize = 20;
 
@@ -80,6 +79,8 @@ public:
 		maxInstance = -1;
 		testFiles.clear();
 		outBest = "";
+		
+		maxLength = 35;
 	}
 
 	virtual ~Options() {
@@ -112,8 +113,8 @@ public:
 			if (pr.first == "beam")
 				beam = atoi(pr.second.c_str());
 
-			if (pr.first == "sepHiddenSize")
-				sepHiddenSize = atoi(pr.second.c_str());
+			if (pr.first == "stateHiddenSize")
+				state_hiddensize = atoi(pr.second.c_str());
 
 			if (pr.first == "wordEmbSize")
 				wordEmbSize = atoi(pr.second.c_str());
@@ -133,8 +134,6 @@ public:
 
 			if (pr.first == "actionEmbSize")
 				actionEmbSize = atoi(pr.second.c_str());
-			if (pr.first == "actionNgram")
-				actionNgram = atoi(pr.second.c_str());
 			if (pr.first == "actionHiddenSize")
 				actionHiddenSize = atoi(pr.second.c_str());
 			if (pr.first == "actionRNNHiddenSize")
@@ -151,6 +150,9 @@ public:
 			if (pr.first == "outBest")
 				outBest = pr.second;
 
+			if (pr.first == "maxLength")
+				maxLength = atoi(pr.second.c_str());
+
 		}
 	}
 
@@ -166,7 +168,7 @@ public:
 		std::cout << "delta = " << delta << std::endl;
 		std::cout << "beam = " << beam << std::endl;
 
-		std::cout << "sepHiddenSize = " << sepHiddenSize << std::endl;
+		std::cout << "stateHiddenSize = " << state_hiddensize << std::endl;
 
 		std::cout << "wordEmbSize = " << wordEmbSize << std::endl;
 		std::cout << "wordHiddenSize = " << wordHiddenSize << std::endl;
@@ -179,7 +181,6 @@ public:
 		std::cout << "mapFile = " << mapFile << std::endl;
 
 		std::cout << "actionEmbSize = " << actionEmbSize << std::endl;
-		std::cout << "actionNgram = " << actionNgram << std::endl;
 		std::cout << "actionHiddenSize = " << actionHiddenSize << std::endl;
 		std::cout << "actionRNNHiddenSize = " << actionRNNHiddenSize << std::endl;
 
@@ -190,6 +191,8 @@ public:
 			std::cout << "testFile = " << testFiles[idx] << std::endl;
 		}
 		std::cout << "outBest = " << outBest << std::endl;
+		std::cout << "maxLengtht = " << maxLength << std::endl;
+		
 	}
 
 	void load(const std::string& infile) {

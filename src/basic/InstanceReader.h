@@ -38,24 +38,24 @@ public:
 			return getNext();
 		}
 
-		vector<string> wordInfo;
-		vector<string> normwordInfo;		
+		vector<string> postwordInfo;
+		vector<string> responsewordInfo;		
 		vector<string> charInfo;
 
-		split_bychar(vecLine[0], wordInfo, ' ');
-		split_bychar(vecLine[1], normwordInfo, ' ');
+		split_bychar(vecLine[0], postwordInfo, ' ');
+		split_bychar(vecLine[1], responsewordInfo, ' ');
 
-		getCharactersFromUTF8String(vecLine[0], charInfo);
+		getCharactersFromUTF8String(vecLine[1], charInfo);
 
-		m_instance.allocate(wordInfo.size(), normwordInfo.size(), charInfo.size());
-		for (int i = 0; i < wordInfo.size(); ++i) {
-			m_instance.words[i] = wordInfo[i];
+		m_instance.allocate(postwordInfo.size(), responsewordInfo.size(), charInfo.size());
+		for (int i = 0; i < postwordInfo.size(); ++i) {
+			m_instance.post_words[i] = postwordInfo[i];
 		}
-		for (int i = 0; i < normwordInfo.size(); i++){
-			m_instance.normwords[i] = normwordInfo[i];
+		for (int i = 0; i < responsewordInfo.size(); i++){
+			m_instance.respon_words[i] = responsewordInfo[i];
 		}
 		for (int i = 0; i < charInfo.size(); ++i) {
-			m_instance.chars[i] = charInfo[i];
+			m_instance.respon_chars[i] = charInfo[i];
 		}
 
 		return &m_instance;
