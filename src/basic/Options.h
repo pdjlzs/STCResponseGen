@@ -167,32 +167,32 @@ public:
 		std::cout << "dropProb = " << dropProb << std::endl;
 		std::cout << "delta = " << delta << std::endl;
 		std::cout << "beam = " << beam << std::endl;
+		std::cout << "maxLength = " << maxLength << std::endl;
 
-		std::cout << "stateHiddenSize = " << state_hiddensize << std::endl;
+		std::cout << "train = " << train << std::endl;
+		std::cout << "verboseIter = " << verboseIter << std::endl;
+		std::cout << "maxInstance = " << maxInstance << std::endl;
+		std::cout << "outBest = " << outBest << std::endl;
 
 		std::cout << "wordEmbSize = " << wordEmbSize << std::endl;
+		std::cout << "wordEmbFineTune = " << wordEmbFineTune << std::endl;
+		std::cout << "wordcontext = " << wordcontext << std::endl;
 		std::cout << "wordHiddenSize = " << wordHiddenSize << std::endl;
 		std::cout << "wordRNNHiddenSize = " << wordRNNHiddenSize << std::endl;
-		std::cout << "wordEmbFineTune = " << wordEmbFineTune << std::endl;
-		std::cout << "wordEmbFile = " << wordEmbFile << std::endl;
 
-		std::cout << "wordcontext = " << wordcontext << std::endl;
-
-		std::cout << "mapFile = " << mapFile << std::endl;
 
 		std::cout << "actionEmbSize = " << actionEmbSize << std::endl;
 		std::cout << "actionHiddenSize = " << actionHiddenSize << std::endl;
 		std::cout << "actionRNNHiddenSize = " << actionRNNHiddenSize << std::endl;
 
-		std::cout << "verboseIter = " << verboseIter << std::endl;
-		std::cout << "train = " << train << std::endl;
-		std::cout << "maxInstance = " << maxInstance << std::endl;
+		std::cout << "stateHiddenSize = " << state_hiddensize << std::endl;
+
+		std::cout << "mapFile = " << mapFile << std::endl;
+		std::cout << "wordEmbFile = " << wordEmbFile << std::endl;
 		for (int idx = 0; idx < testFiles.size(); idx++) {
 			std::cout << "testFile = " << testFiles[idx] << std::endl;
 		}
-		std::cout << "outBest = " << outBest << std::endl;
-		std::cout << "maxLengtht = " << maxLength << std::endl;
-		
+		std::cout << endl;
 	}
 
 	void load(const std::string& infile) {

@@ -202,8 +202,9 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		m_pipe.readInstances(m_options.testFiles[idx], otherInsts[idx], m_driver._hyperparams.maxlength, m_options.maxInstance);
 	}
 
-	createAlphabet(trainInsts);
+	m_driver._hyperparams.setRequared(m_options);
 
+	createAlphabet(trainInsts);
 
 	//lookup table setting
 	bool initial_successed = false;
@@ -220,7 +221,6 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
 	m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
-	m_driver._hyperparams.setRequared(m_options);
 	m_driver.initial();
 
 	vector<vector<CAction> > trainInstGoldactions;
