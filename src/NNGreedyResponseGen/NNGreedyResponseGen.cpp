@@ -117,7 +117,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 
 		if ((numInstance + 1) % (m_options.verboseIter * 100) == 0) {
 			cout << numInstance + 1 << " ";
-			if ((numInstance + 1) % (40 * m_options.verboseIter) == 0)
+			if ((numInstance + 1) % (40 * m_options.verboseIter * 100) == 0)
 				cout << std::endl;
 			cout.flush();
 		}
@@ -169,16 +169,16 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 			exit(0);
 		}
 
-		if ((numInstance + 1) % m_options.verboseIter == 0) {
+		if ((numInstance + 1) % (m_options.verboseIter * 100) == 0) {
 			cout << numInstance + 1 << " ";
-			if ((numInstance + 1) % (40 * m_options.verboseIter) == 0)
+			if ((numInstance + 1) % (40 * m_options.verboseIter * 100) == 0)
 				cout << std::endl;
 			cout.flush();
 		}
 		if (m_options.maxInstance > 0 && numInstance == m_options.maxInstance)
 			break;
 	}
-	cout << endl;
+	cout << numInstance << " " << endl;
 }
 
 void RespondGen::train(const string& trainFile, const string& devFile, const string& testFile, const string& modelFile, const string& optionFile) {
