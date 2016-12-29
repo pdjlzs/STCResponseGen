@@ -48,9 +48,9 @@ int RespondGen::initialActionWordMap() {
 			}
 			if (vecInfo.size() - 1 > maxCandidate) maxCandidate = vecInfo.size() - 1;
 		}
-		if ((dic_num + 1) % (m_options.verboseIter * 1000) == 0) {
+		if ((dic_num + 1) % (m_options.verboseIter * 100) == 0) {
 			cout << dic_num + 1 << " ";
-			if ((dic_num + 1) % (40 * m_options.verboseIter * 1000) == 0)
+			if ((dic_num + 1) % (40 * m_options.verboseIter * 100) == 0)
 				cout << std::endl;
 			cout.flush();
 		}
@@ -115,7 +115,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 			exit(0);
 		}
 
-		if ((numInstance + 1) % m_options.verboseIter == 0) {
+		if ((numInstance + 1) % (m_options.verboseIter * 100) == 0) {
 			cout << numInstance + 1 << " ";
 			if ((numInstance + 1) % (40 * m_options.verboseIter) == 0)
 				cout << std::endl;
@@ -235,8 +235,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	static Metric eval_train, eval_dev, eval_test;
 
-	//int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
-	int maxIter = m_options.maxIter;
+	int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
 	//int oneIterMaxRound = (inputSize + m_options.batchSize - 1) / m_options.batchSize;
 	std::cout << "maxIter = " << maxIter << std::endl;
 	int devNum = devInsts.size(), testNum = testInsts.size();
@@ -270,7 +269,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_train.overall_label_count += m_driver._eval.overall_label_count;
 				eval_train.correct_label_count += m_driver._eval.correct_label_count;
 
-				if ((idy + 1) % (m_options.verboseIter * 10) == 0) {
+				if ((idy + 1) % m_options.verboseIter == 0) {
 					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
 				}
 				m_driver.updateModel();
