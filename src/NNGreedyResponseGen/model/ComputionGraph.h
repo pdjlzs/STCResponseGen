@@ -46,7 +46,7 @@ public:
 		std::cout << "state size: " << sizeof(CStateItem) << std::endl;
 		std::cout << "action node size: " << sizeof(ActionedNodes) << std::endl;
 		globalNodes.resize(max_sentence_clength);
-		states.resize(opts.maxlength + 1);
+		states.resize(opts.maxlength + 2);
 
 		globalNodes.initial(model, opts, mem);
 		for (int idx = 0; idx < states.size(); idx++) {
@@ -90,7 +90,7 @@ public:
 		static CAction answer, action;
 		static vector<COutput> per_step_output;
 		static NRHeap<CScoredState, CScoredState_Compare> beam;
-		beam.resize(pOpts->action_num + 1);
+		beam.resize(pOpts->action_num + 2);
 
 		pGenerator = &start;
 
