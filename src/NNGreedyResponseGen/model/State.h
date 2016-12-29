@@ -184,14 +184,58 @@ public:
 			actions.push_back(ac);
 		}
 		else {
-			if (word_map.find(_word) != word_map.end()) {
-				vector<string>& wordCandi = word_map[_word];
-				for (int idy = 0; idy < wordCandi.size(); idy++) {
-					ac.set(CAction::SEP, wordCandi[idy]);
+			string preword = _prevState == 0 ? "-start-" : this->_prevState->_word;
+			string wordbigram = preword + seperateKey + _word;
+			if (word_map.find(wordbigram) != word_map.end()) {
+				vector<string>& wordCandi = word_map[wordbigram];
+				int candi_size = wordCandi.size();
+				int max_candid = opts->maxCandidAction;
+				std::vector<int> index_set;
+
+				if (candi_size > max_candid){
+
+					int highFreWord_num = max_candid;
+					if (wordbigram == "-start-#-start-") highFreWord_num = 15000;
+					int highFrePart_num = max_candid * 0.9;
+					int lowFreqpart_num = max_candid - highFrePart_num;
+					std::vector<int> shuffle;
+
+					// 90% of candidate actions are selected in high frequence word
+					for (int i = 0; i < highFreWord_num; i++)
+						shuffle.push_back(i);
+					random_shuffle(shuffle.begin(), shuffle.end());
+					for (int i = 0; i < highFrePart_num; i++)
+						index_set.push_back(shuffle[i]);
+
+					// 10% of candidate actions are selected in other words
+					for (int i = highFreWord_num; i < candi_size; i++)
+						shuffle.push_back(i);
+					random_shuffle(shuffle.begin(), shuffle.end());
+					for (int i = 0; i < lowFreqpart_num; i++)
+						index_set.push_back(shuffle[i]);
+				}
+				else {
+					for (int i = 0; i < wordCandi.size(); i++){
+						index_set.push_back(i);
+					}
+				}
+				/*
+				for (int i = 0; i < index_set.size(); i++)
+					cout << index_set[i] << " ";
+				cout << endl;
+				*/
+
+				for (int i = 0; i < index_set.size(); i++){
+					ac.set(CAction::SEP, wordCandi[index_set[i]]);
 					actions.push_back(ac);
 				}
+				
 			}
-			else std::cout << _word << " is not in dic" << endl;
+			//else std::cout << wordbigram << " is not in dic" << endl;
+			if (actions.size() == 0){
+				ac.set(CAction::SEP, "-end-");
+				actions.push_back(ac);
+			}
 		}
 
 	}

@@ -48,17 +48,17 @@ int RespondGen::initialActionWordMap() {
 			}
 			if (vecInfo.size() - 1 > maxCandidate) maxCandidate = vecInfo.size() - 1;
 		}
-		if ((dic_num + 1) % m_options.verboseIter == 0) {
+		if ((dic_num + 1) % (m_options.verboseIter * 1000) == 0) {
 			cout << dic_num + 1 << " ";
-			if ((dic_num + 1) % (40 * m_options.verboseIter) == 0)
+			if ((dic_num + 1) % (40 * m_options.verboseIter * 1000) == 0)
 				cout << std::endl;
 			cout.flush();
 		}
 		dic_num++;
 	}
-	cout << std::endl;
 	inf.close();
-	m_driver._hyperparams.action_num = CAction::NO_ACTION + maxCandidate;
+
+	cout << std::endl << "All max candidate action number = " << maxCandidate << endl;
 }
 
 // all linear features are extracted from positive examples
@@ -189,7 +189,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	initialActionWordMap();
 
-	m_driver._hyperparams.setRequared(m_options);
+	m_driver._hyperparams.setRequared(m_options, CAction::NO_ACTION);
 
 	vector<Instance> trainInsts, devInsts, testInsts;
 	std::cout << "Loading train, dev, test corpus ... " << std::endl;

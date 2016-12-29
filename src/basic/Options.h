@@ -46,6 +46,7 @@ public:
 	string outBest;
 
 	int maxLength;
+	int maxCandidAction;
 
 	Options() {
 		wordCutOff = 0;
@@ -80,7 +81,8 @@ public:
 		testFiles.clear();
 		outBest = "";
 		
-		maxLength = 35;
+		maxLength = 28;
+		maxCandidAction = 100;
 	}
 
 	virtual ~Options() {
@@ -152,6 +154,8 @@ public:
 
 			if (pr.first == "maxLength")
 				maxLength = atoi(pr.second.c_str());
+			if (pr.first == "maxCandidAction")
+				maxCandidAction = atoi(pr.second.c_str());
 
 		}
 	}
@@ -168,6 +172,7 @@ public:
 		std::cout << "delta = " << delta << std::endl;
 		std::cout << "beam = " << beam << std::endl;
 		std::cout << "maxLength = " << maxLength << std::endl;
+		std::cout << "maxCandidAction = " << maxCandidAction << std::endl;
 
 		std::cout << "train = " << train << std::endl;
 		std::cout << "verboseIter = " << verboseIter << std::endl;

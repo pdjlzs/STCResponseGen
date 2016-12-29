@@ -11,6 +11,7 @@ struct HyperParams{
 	//required
 	int maxlength;
 	int action_num;
+	int maxCandidAction;
 	dtype delta;
 	unordered_map<string, vector<string> > word_map;//for actions
 	unordered_map<string, int> word_stat;
@@ -47,10 +48,12 @@ public:
 	}
 
 public:
-	void setRequared(Options& opt){
+	void setRequared(Options& opt, int noActionCode){
 		//please specify dictionary outside
 		//please sepcify char_dim, word_dim and action_dim outside.
 		maxlength = opt.maxLength;
+		action_num = noActionCode + opt.maxCandidAction;
+		maxCandidAction = opt.maxCandidAction;
 		delta = opt.delta;
 		bAssigned = true;
 
