@@ -105,6 +105,10 @@ public:
 			if (train) answer = (*goldAC)[step];
 			beam.clear();
 			pGenerator->getCandidateActions(actions, words.size(), pOpts);
+			
+			if (train && std::find(actions.begin(), actions.end(), answer) == actions.end())
+				actions.push_back(answer);
+
 			pGenerator->computeNextScore(this, actions);
 			scored_action.item = pGenerator;
 			for (int idy = 0; idy < actions.size(); ++idy) {
