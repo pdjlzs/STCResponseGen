@@ -21,8 +21,8 @@ RespondGen::~RespondGen() {
 
 int RespondGen::initialActionWordMap() {
 	cout << "Creating candidate action alphabet..." << endl;
-	m_driver._hyperparams.word_map.clear();
-	//m_driver._hyperparams.reverse_word_map.clear();
+	m_driver._hyperparams.trigram_candid.clear();
+	m_driver._hyperparams.triword_stat.clear();
 	if (m_options.mapFile == "") {
 		return -1;
 	}
@@ -42,11 +42,23 @@ int RespondGen::initialActionWordMap() {
 			break;
 		}
 		if (!strLine.empty()) {
-			split_bychar(strLine, vecInfo, ' ');
-			for (int j = 1; j < vecInfo.size(); j++) {
-				m_driver._hyperparams.word_map[vecInfo[0]].push_back(vecInfo[j]);
-			}
-			if (vecInfo.size() - 1 > maxCandidate) maxCandidate = vecInfo.size() - 1;
+			split_bystr(strLine, vecInfo, "\t");
+			string tri_words = vecInfo[0];
+			int freq = atoi(vecInfo[1].c_str());
+			vector<string> trigram_info;
+			split_bychar(tri_words, trigram_info, '#');
+			if (trigram_info.size() < 3) continue;
+
+			string pre_word = trigram_info[0];
+			string cur_word = trigram_info[1];
+			string nex_word = trigram_info[2];
+
+			m_driver._hyperparams.trigram_candid[pre_word + "#" + cur_word].push_back(nex_word);
+			m_driver._hyperparams.triword_stat[tri_words] = freq;
+
+			if (m_driver._hyperparams.trigram_candid[pre_word + "#" + cur_word].size() - 1 > maxCandidate)
+				maxCandidate = m_driver._hyperparams.trigram_candid[pre_word + "#" + cur_word].size() - 1;
+
 		}
 		if ((dic_num + 1) % (m_options.verboseIter * 100) == 0) {
 			cout << dic_num + 1 << " ";
@@ -57,6 +69,46 @@ int RespondGen::initialActionWordMap() {
 		dic_num++;
 	}
 	inf.close();
+
+	int table_size;
+	const float power = 0.75;
+	unordered_map<string, vector<string> > &word_map = m_driver._hyperparams.trigram_candid;
+	unordered_map<string, vector<int> > &rand_tabel = m_driver._hyperparams.random_tabel;
+	unordered_map<string, int> &trigram_stat = m_driver._hyperparams.triword_stat;
+	unordered_map<string, vector<string> >::iterator it;
+	int max_candid_action = m_driver._hyperparams.maxCandidAction;
+	for (it = word_map.begin(); it != word_map.end(); it++){
+		if (it->second.size() > max_candid_action){
+			if (it->first == "-start-#-start-") table_size = 1e6;
+			else if (it->second.size() >= 900) table_size = 1e5;
+			else table_size = 1e4;
+			rand_tabel[it->first].resize(table_size);
+			double d1 = 0, train_words_pow = 0;
+			vector<int> vocab;
+			for (int i = 0; i < it->second.size(); i++){
+				string trigram_words = it->first + "#" + it->second[i];
+				int trigram_freq = trigram_stat[trigram_words];
+				train_words_pow += pow(trigram_freq, power);
+				vocab.push_back(trigram_freq);
+			}
+			int i = 0;
+			d1 = pow(vocab[i], power) / train_words_pow;
+			for (int a = 0; a < table_size; a++) {
+				rand_tabel[it->first][a] = i;
+				if (a / (double)table_size > d1) {
+					i++;
+					d1 += pow(vocab[i], power) / train_words_pow;
+				}
+				if (i >= vocab.size()) i = vocab.size() - 1;
+			}
+			//for (int a = table_size- 10000; a < table_size; a++) {
+			//cout << rand_tabel[it->first][table_size-1] << " ";
+			//}
+			int last_word_candi_index = rand_tabel[it->first][table_size - 1];
+			if (last_word_candi_index != it->second.size() - 1)
+				cout << "Error! Not all candidate are in the random tabel" << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
+		}
+	}
 
 	cout << std::endl << "All max candidate action number = " << maxCandidate << endl;
 }
@@ -187,9 +239,9 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	m_options.showOptions();
 
-	initialActionWordMap();
-
 	m_driver._hyperparams.setRequared(m_options, CAction::NO_ACTION);
+
+	initialActionWordMap();
 
 	vector<Instance> trainInsts, devInsts, testInsts;
 	std::cout << "Loading train, dev, test corpus ... " << std::endl;
@@ -318,10 +370,10 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			std::cout << "dev:" << std::endl;
 			eval_dev.print();
 
-			if (!m_options.outBest.empty() && eval_dev.getAccuracy() > bestFmeasure) {
-				m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
-				bCurIterBetter = true;
-			}
+			//if (!m_options.outBest.empty() && eval_dev.getAccuracy() > bestFmeasure) {
+			m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
+			bCurIterBetter = true;
+			//}
 
 			if (testNum > 0) {
 				time_start = clock();
@@ -371,11 +423,11 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			}
 
 
-			if (eval_dev.getAccuracy() > bestFmeasure) {
-				std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
-				bestFmeasure = eval_dev.getAccuracy();
-				writeModelFile(modelFile);
-			}
+			//if (eval_dev.getAccuracy() > bestFmeasure) {
+			std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
+			bestFmeasure = eval_dev.getAccuracy();
+			writeModelFile(modelFile);
+			//}
 		}
 	}
 }
@@ -431,7 +483,28 @@ int main(int argc, char* argv[]) {
 	bool bTrain = false;
 	dsr::Argument_helper ah;
 	int memsize = 1;
-
+	/*
+	vector<int> vocab = { 10, 1000, 500, 250, 100, 50, 20, 10, 1 };
+	int vocab_size = vocab.size();
+	double d1, power = 0.75, train_words_pow = 0;
+	int table[500];
+	int table_size = 500;
+	for (int a = 0; a < vocab_size; a++){
+		train_words_pow += pow(vocab[a], power);
+	}
+	int i = 0;
+	d1 = pow(vocab[i], power) / train_words_pow;
+	for (int a = 0; a < table_size; a++) {
+		table[a] = i;
+		if (a / (double)table_size > d1) {
+			i++;
+			d1 += pow(vocab[i], power) / train_words_pow;
+		}
+		if (i >= vocab_size) i = vocab_size - 1;
+	}
+	for (int a = 0; a < table_size; a++) {
+		cout << table[a] << " ";
+	}*/
 
 	ah.new_flag("l", "learn", "train or test", bTrain);
 	ah.new_named_string("train", "trainCorpus", "named_string", "training corpus to train a model, must when training", trainFile);

@@ -16,6 +16,7 @@
 #include "GlobalNodes.h"
 #include "IncrementalNodes.h"
 
+#include <set>
 class CStateItem {
 public:
 	std::string _word;
@@ -170,7 +171,8 @@ public:
 	void getCandidateActions(vector<CAction> & actions, int post_word_size, HyperParams* opts) const{
 		actions.clear();
 		static CAction ac;
-		unordered_map<string, vector<string> >& word_map = opts->word_map;
+		unordered_map<string, vector<string> >& word_map = opts->trigram_candid;
+		unordered_map<string, vector<int> > &rand_tabel = opts->random_tabel;
 		if (_word == "-end-"){
 			ac.set(CAction::FIN, "");
 			actions.push_back(ac);
@@ -188,48 +190,34 @@ public:
 			string wordbigram = preword + seperateKey + _word;
 			if (word_map.find(wordbigram) != word_map.end()) {
 				vector<string>& wordCandi = word_map[wordbigram];
+				vector<int>& wordCandiTabel = rand_tabel[wordbigram];
 				int candi_size = wordCandi.size();
 				int max_candid = opts->maxCandidAction;
-				std::vector<int> index_set;
+				std::set<int> index_set;
 
 				if (candi_size > max_candid){
-
-					int highFreWord_num = max_candid;
-					if (wordbigram == "-start-#-start-") highFreWord_num = 15000;
-					int highFrePart_num = max_candid * 0.9;
-					int lowFreqpart_num = max_candid - highFrePart_num;
-					std::vector<int> shuffle;
-
-					// 90% of candidate actions are selected in high frequence word
-					for (int i = 0; i < highFreWord_num; i++)
-						shuffle.push_back(i);
-					random_shuffle(shuffle.begin(), shuffle.end());
-					for (int i = 0; i < highFrePart_num; i++)
-						index_set.push_back(shuffle[i]);
-
-					// 10% of candidate actions are selected in other words
-					for (int i = highFreWord_num; i < candi_size; i++)
-						shuffle.push_back(i);
-					random_shuffle(shuffle.begin(), shuffle.end());
-					for (int i = 0; i < lowFreqpart_num; i++)
-						index_set.push_back(shuffle[i]);
+					random_shuffle(wordCandiTabel.begin(), wordCandiTabel.end());
+					for (int i = 0; index_set.size() < max_candid; i++){
+						index_set.insert(wordCandiTabel[i]);
+					}
 				}
 				else {
 					for (int i = 0; i < wordCandi.size(); i++){
-						index_set.push_back(i);
+						index_set.insert(i);
 					}
 				}
+				set<int>::iterator it;
 				/*
-				for (int i = 0; i < index_set.size(); i++)
-					cout << index_set[i] << " ";
-				cout << endl;
-				*/
+				//debug
+				for (it = index_set.begin(); it != index_set.end(); it++)
+				cout << *it << " ";
+				cout << endl;*/
 
-				for (int i = 0; i < index_set.size(); i++){
-					ac.set(CAction::SEP, wordCandi[index_set[i]]);
+				for (it = index_set.begin(); it != index_set.end(); it++){
+					ac.set(CAction::SEP, wordCandi[*it]);
 					actions.push_back(ac);
 				}
-				
+
 			}
 			//else std::cout << wordbigram << " is not in dic" << endl;
 			if (actions.size() == 0){

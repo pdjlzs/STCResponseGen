@@ -13,7 +13,9 @@ struct HyperParams{
 	int action_num;
 	int maxCandidAction;
 	dtype delta;
-	unordered_map<string, vector<string> > word_map;//for actions
+	unordered_map<string, vector<string> > trigram_candid;	// tri-gram dic for get actions candidate
+	unordered_map<string, vector<int> > random_tabel;		// each word have more than maxCandidAction wil have a random_tabel
+	unordered_map<string, int> triword_stat;	// tri-gram word freq for random tabel
 	unordered_map<string, int> word_stat;
 
 
