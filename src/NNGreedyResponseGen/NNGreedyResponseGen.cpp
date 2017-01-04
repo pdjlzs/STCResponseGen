@@ -326,6 +326,10 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
 				}
 				m_driver.updateModel();
+
+				if ((idy + 1) % (int)1e5 == 0) {
+					writeModelFile(modelFile + std::to_string((idy + 1) / (int)1e5));
+				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
 		}
