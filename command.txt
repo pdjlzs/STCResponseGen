@@ -2,6 +2,9 @@ cmake .. -DEIGEN3_INCLUDE_DIR=/c/eigen/ -DN3L_INCLUDE_DIR=/d/workspace/LibN3L-2.
 cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/
 
 #Windows
--l -train D:\data\STCRG\post_response.pair -dev D:\data\STCRG\post_response.pair -test D:\data\STCRG\test -option D:\data\STCRG\optionx86.lstm16
+-l -train D:\data\STCRG\post_response.pair.rmemoji.clean -dev D:\data\STCRG\post_response.pair.rmemoji.clean -test D:\data\STCRG\test -model D:\data\STCRG\model -option D:\data\STCRG\optionx86.lstmgredy
 #linux
--l -train ~/workspace/data/STCRG/post_response.pair -dev ~/workspace/data/STCRG/post_response.pair -test ~/workspace/data/STCRG/test -option ~/workspace/data/STCRG/option_linux.lstm16
+-l -train ~/workspace/data/STCRG/post_response.pair.rmemoji.clean -dev ~/workspace/data/STCRG/post_response.pair.rmemoji.clean -test ~/workspace/data/STCRG/test -option ~/workspace/data/STCRG/option_linux.lstmgredy
+
+#test Windows
+-model D:\data\STCRG\model -test D:\data\STCRG\test -output  D:\data\STCRG\test.output

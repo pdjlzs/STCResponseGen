@@ -20,10 +20,11 @@ RespondGen::~RespondGen() {
 }
 
 int RespondGen::initialActionWordMap() {
-	cout << "Creating candidate action alphabet..." << endl;
+	cout << "Creating candidate action alphabet and random talbe..." << endl;
 	m_driver._hyperparams.trigram_candid.clear();
 	m_driver._hyperparams.triword_stat.clear();
 	if (m_options.mapFile == "") {
+		cout << "Error, candidate dict not find !" << endl;
 		return -1;
 	}
 
@@ -438,15 +439,17 @@ void RespondGen::predict(const Instance& input, vector<string>& resp_out) {
 
 void RespondGen::test(const string& testFile, const string& outputFile, const string& modelFile) {
 	loadModelFile(modelFile);
+	m_driver.testInitial();
+
 	vector<Instance> testInsts;
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
 
-	vector<vector<string> > testInstResults(testInsts.size()), testInstNormResults(testInsts.size());
+	vector<vector<string> > testInstResults(testInsts.size());
 	Metric eval_test;
 	eval_test.reset();
 	for (int idx = 0; idx < testInsts.size(); idx++) {
-		predict(testInsts[idx], testInstNormResults[idx]);
-		testInsts[idx].evaluate(testInstNormResults[idx], eval_test);
+		predict(testInsts[idx], testInstResults[idx]);
+		testInsts[idx].evaluate(testInstResults[idx], eval_test);
 	}
 	std::cout << "test:" << std::endl;
 	eval_test.print();
@@ -454,12 +457,13 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	std::ofstream os(outputFile.c_str());
 
 	for (int idx = 0; idx < testInsts.size(); idx++) {
-		for (int idy = 0; idy < testInstResults[idx].size(); idy++) {
-			os << testInstResults[idx][idy] << " ";
+		const Instance &inst = testInsts[idx];
+		for (int idy = 0; idy < inst.postWordsize(); idy++) {
+			os << inst.post_words[idy] << " ";
 		}
 		os << std::endl;
 		for (int idy = 0; idy < testInstResults[idx].size(); idy++) {
-			os << testInstNormResults[idx][idy] << " ";
+			os << testInstResults[idx][idy] << " ";
 		}
 		os << std::endl;
 		os << std::endl;
@@ -469,11 +473,34 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 
 
 void RespondGen::loadModelFile(const string& inputModelFile) {
+	ifstream m_inf;
+	if (m_inf.is_open()) {
+		m_inf.close();
+		m_inf.clear();
+	}
+	m_inf.open(inputModelFile);
 
+	if (!m_inf.is_open()) {
+		cout << "LoadModelFile open file err: " << inputModelFile << endl;
+	}
+	cout << "Start loading model file..." << endl;
+	m_driver._hyperparams.loadModel(m_inf);
+	m_driver._modelparams.loadModel(m_inf, &m_driver.aligned_mem);
+	cout << "Model load complete !" << endl;
+	m_driver._hyperparams.print();
 }
 
 void RespondGen::writeModelFile(const string& outputModelFile) {
+	ofstream m_outf;
+	m_outf.open(outputModelFile.c_str());
+	if (!m_outf)
+		cout << "writeModelFile open file err: " << outputModelFile << endl;
+	cout << "Start writing to ... " << outputModelFile << endl;
 
+	m_driver._hyperparams.saveModel(m_outf);
+	m_driver._modelparams.saveModel(m_outf);
+
+	m_outf.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -483,28 +510,6 @@ int main(int argc, char* argv[]) {
 	bool bTrain = false;
 	dsr::Argument_helper ah;
 	int memsize = 1;
-	/*
-	vector<int> vocab = { 10, 1000, 500, 250, 100, 50, 20, 10, 1 };
-	int vocab_size = vocab.size();
-	double d1, power = 0.75, train_words_pow = 0;
-	int table[500];
-	int table_size = 500;
-	for (int a = 0; a < vocab_size; a++){
-		train_words_pow += pow(vocab[a], power);
-	}
-	int i = 0;
-	d1 = pow(vocab[i], power) / train_words_pow;
-	for (int a = 0; a < table_size; a++) {
-		table[a] = i;
-		if (a / (double)table_size > d1) {
-			i++;
-			d1 += pow(vocab[i], power) / train_words_pow;
-		}
-		if (i >= vocab_size) i = vocab_size - 1;
-	}
-	for (int a = 0; a < table_size; a++) {
-		cout << table[a] << " ";
-	}*/
 
 	ah.new_flag("l", "learn", "train or test", bTrain);
 	ah.new_named_string("train", "trainCorpus", "named_string", "training corpus to train a model, must when training", trainFile);
