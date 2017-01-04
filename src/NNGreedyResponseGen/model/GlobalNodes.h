@@ -52,7 +52,10 @@ public:
 		for (int idx = 0; idx < word_size; idx++){
 			currWord = words[idx];
 			word_ext_inputs[idx].forward(cg, currWord);
-			int c = hyparams->word_stat[currWord];
+			int c;
+			if (hyparams->word_stat.find(currWord) != hyparams->word_stat.end())
+				c = hyparams->word_stat[currWord];
+			else c = 0;
 			bool  dropFlag = cg->train && (rand() / double(RAND_MAX) >= (c / (0.25 + c)));
 			if (dropFlag && hyparams->unk_strategy == 1) {
 				currWord = unknownkey;

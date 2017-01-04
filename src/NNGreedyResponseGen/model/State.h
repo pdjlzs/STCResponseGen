@@ -190,12 +190,12 @@ public:
 			string wordbigram = preword + seperateKey + _word;
 			if (word_map.find(wordbigram) != word_map.end()) {
 				vector<string>& wordCandi = word_map[wordbigram];
-				vector<int>& wordCandiTabel = rand_tabel[wordbigram];
 				int candi_size = wordCandi.size();
 				int max_candid = opts->maxCandidAction;
 				std::set<int> index_set;
 
 				if (candi_size > max_candid){
+					vector<int>& wordCandiTabel = rand_tabel[wordbigram];
 					random_shuffle(wordCandiTabel.begin(), wordCandiTabel.end());
 					for (int i = 0; index_set.size() < max_candid; i++){
 						index_set.insert(wordCandiTabel[i]);
