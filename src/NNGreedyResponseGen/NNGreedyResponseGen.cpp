@@ -311,6 +311,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		if (m_options.batchSize == 1) {
 			eval_train.reset();
 			bEvaluate = true;
+			clock_t start_time = clock(), end_time;
 			for (int idy = 0; idy < inputSize; idy++) {
 				subInstances.clear();
 				subInstGoldActions.clear();
@@ -323,12 +324,15 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_train.correct_label_count += m_driver._eval.correct_label_count;
 
 				if ((idy + 1) % m_options.verboseIter == 0) {
-					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
+					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy();
+					end_time = clock();
+					cout << "  train cost time :" << (end_time - start_time) / CLOCKS_PER_SEC << endl;
+					start_time = clock();
 				}
 				m_driver.updateModel();
 
 				if ((idy + 1) % (int)1e5 == 0) {
-					writeModelFile(modelFile + std::to_string((idy + 1) / (int)1e5));
+					writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string((idy + 1) / (int)1e5));
 				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
