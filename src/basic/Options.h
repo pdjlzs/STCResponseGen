@@ -47,6 +47,8 @@ public:
 
 	int maxLength;
 	int maxCandidAction;
+	
+	int unkStrategy;
 
 	Options() {
 		wordCutOff = 0;
@@ -83,6 +85,8 @@ public:
 		
 		maxLength = 28;
 		maxCandidAction = 100;
+
+		unkStrategy = 0;
 	}
 
 	virtual ~Options() {
@@ -156,6 +160,8 @@ public:
 				maxLength = atoi(pr.second.c_str());
 			if (pr.first == "maxCandidAction")
 				maxCandidAction = atoi(pr.second.c_str());
+			if (pr.first == "unkStrategy")
+				unkStrategy = atoi(pr.second.c_str());
 
 		}
 	}
@@ -173,6 +179,7 @@ public:
 		std::cout << "beam = " << beam << std::endl;
 		std::cout << "maxLength = " << maxLength << std::endl;
 		std::cout << "maxCandidAction = " << maxCandidAction << std::endl;
+		std::cout << "unkStrategy = " << unkStrategy << std::endl;
 
 		std::cout << "train = " << train << std::endl;
 		std::cout << "verboseIter = " << verboseIter << std::endl;
