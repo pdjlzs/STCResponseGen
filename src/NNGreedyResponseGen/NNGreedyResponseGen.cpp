@@ -24,7 +24,7 @@ int RespondGen::initialActionWordMap() {
 	m_driver._hyperparams.trigram_candid.clear();
 	m_driver._hyperparams.triword_stat.clear();
 	if (m_options.mapFile == "") {
-		cout << "Error, candidate dict not find !" << endl;
+		cout << "Error, candidate dict is not find !" << endl;
 		return -1;
 	}
 
@@ -34,6 +34,9 @@ int RespondGen::initialActionWordMap() {
 		inf.clear();
 	}
 	inf.open(m_options.mapFile.c_str());
+	if (!inf.is_open()) {
+		cout << "Candidate dic file open file err: " << m_options.mapFile << endl;
+	}
 	int maxCandidate = 0;
 	int dic_num = 0;
 	static string strLine;
@@ -451,19 +454,25 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 
 	vector<Instance> testInsts;
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
-
 	vector<vector<string> > testInstResults(testInsts.size());
 	Metric eval_test;
 	eval_test.reset();
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstResults[idx]);
 		testInsts[idx].evaluate(testInstResults[idx], eval_test);
+		if (idx % 10000 == 0){
+			cout << idx/(float)testInsts.size() << "\r";
+			cout.flush();
+		}
+		cout << endl;
+
 	}
 	std::cout << "test:" << std::endl;
 	eval_test.print();
 
 	std::ofstream os(outputFile.c_str());
 
+	cout << "Decode complete ! Start writing to file ..." << outputFile << endl;
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		const Instance &inst = testInsts[idx];
 		for (int idy = 0; idy < inst.postWordsize(); idy++) {
