@@ -461,12 +461,11 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 		predict(testInsts[idx], testInstResults[idx]);
 		testInsts[idx].evaluate(testInstResults[idx], eval_test);
 		if (idx % 10000 == 0){
-			cout << idx/(float)testInsts.size() << "\r";
+			cout << idx / (float)testInsts.size() << "\r";
 			cout.flush();
 		}
-		cout << endl;
-
 	}
+	cout << endl;
 	std::cout << "test:" << std::endl;
 	eval_test.print();
 
