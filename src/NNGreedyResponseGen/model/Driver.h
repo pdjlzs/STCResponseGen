@@ -83,6 +83,21 @@ public:
 		setUpdateParameters(_hyperparams.nnRegular, _hyperparams.adaAlpha, _hyperparams.adaEps);
 	}
 
+	inline void preTrainInitial() {
+		if (!_hyperparams.bValid()){
+			std::cout << "hyper parameter initialization Error, Please check!" << std::endl;
+			return;
+		}
+		_hyperparams.print();
+
+		_pcg = new ComputionGraph();
+		_pcg->initial(_modelparams, _hyperparams, &aligned_mem);
+
+		std::cout << "allocated memory: " << aligned_mem.capacity << ", total required memory: " << aligned_mem.required << ", perc = " << aligned_mem.capacity*1.0 / aligned_mem.required << std::endl;
+
+		setUpdateParameters(_hyperparams.nnRegular, _hyperparams.adaAlpha, _hyperparams.adaEps);
+	}
+
 public:
   dtype train(const std::vector<std::vector<string> >& sentences, const vector<vector<CAction> >& goldACs) {
     _eval.reset();

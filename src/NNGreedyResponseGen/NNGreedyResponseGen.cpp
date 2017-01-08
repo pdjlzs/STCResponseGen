@@ -238,14 +238,22 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 }
 
 void RespondGen::train(const string& trainFile, const string& devFile, const string& testFile, const string& modelFile, const string& optionFile) {
+
 	if (optionFile != "")
 		m_options.load(optionFile);
 
-	m_options.showOptions();
+	ifstream inf;
+	inf.open(modelFile.c_str());
+	if (inf.is_open()) {
+		loadPretrainModel(modelFile);
+		m_driver.preTrainInitial();
+	}
+	else{
+		m_options.showOptions();
+		m_driver._hyperparams.setRequared(m_options, CAction::NO_ACTION);
+		initialActionWordMap();
+	}
 
-	m_driver._hyperparams.setRequared(m_options, CAction::NO_ACTION);
-
-	initialActionWordMap();
 
 	vector<Instance> trainInsts, devInsts, testInsts;
 	std::cout << "Loading train, dev, test corpus ... " << std::endl;
@@ -260,24 +268,26 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		m_pipe.readInstances(m_options.testFiles[idx], otherInsts[idx], m_driver._hyperparams.maxlength, m_options.maxInstance);
 	}
 
-	createAlphabet(trainInsts);
+	if (!inf.is_open()) {
+		createAlphabet(trainInsts);
 
-	//lookup table setting
-	bool initial_successed = false;
-	if (m_options.wordEmbFile != "") {
-		initial_successed = m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbFile, m_options.wordEmbFineTune);
-		if (initial_successed) {
-			m_options.wordEmbSize = m_driver._modelparams.word_ext_table.nDim;
+		//lookup table setting
+		bool initial_successed = false;
+		if (m_options.wordEmbFile != "") {
+			initial_successed = m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbFile, false);
+			if (initial_successed) {
+				m_options.wordEmbSize = m_driver._modelparams.word_ext_table.nDim;
+			}
 		}
-	}
-	if (!initial_successed) {
-		m_options.wordEmbFineTune = true;
-		m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbSize, true);
-	}
+		if (!initial_successed) {
+			m_options.wordEmbFineTune = true;
+			m_driver._modelparams.word_ext_table.initial(&m_driver._modelparams.word_ext_alphas, m_options.wordEmbSize, true);
+		}
 
-	m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
-	m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
-	m_driver.initial();
+		m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
+		m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
+		m_driver.initial();
+	}
 
 	vector<vector<CAction> > trainInstGoldactions;
 	getGoldActions(trainInsts, trainInstGoldactions);
@@ -329,7 +339,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				if ((idy + 1) % m_options.verboseIter == 0) {
 					std::cout << "current: " << idy + 1 << ", Cost = " << cost << ", Correct(%) = " << eval_train.getAccuracy();
 					end_time = clock();
-					cout << "  train cost time :" << (end_time - start_time) / CLOCKS_PER_SEC << endl;
+					cout << "  train cost time :" << (end_time - start_time) / CLOCKS_PER_SEC << "s" << endl;
 					start_time = clock();
 				}
 				m_driver.updateModel();
@@ -378,7 +388,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 					decodeInstResults.push_back(curDecodeInst);
 				}
 			}
-			std::cout << "Dev finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
+			std::cout << "Dev finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << "s" << std::endl;
 			std::cout << "dev:" << std::endl;
 			eval_dev.print();
 
@@ -401,7 +411,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 						decodeInstResults.push_back(curDecodeInst);
 					}
 				}
-				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
+				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << "s" << std::endl;
 				std::cout << "test:" << std::endl;
 				eval_test.print();
 
@@ -425,7 +435,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 						decodeInstResults.push_back(curDecodeInst);
 					}
 				}
-				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << std::endl;
+				std::cout << "Test finished. Total time taken is: " << double(clock() - time_start) / CLOCKS_PER_SEC << "s" << std::endl;
 				std::cout << "test:" << std::endl;
 				eval_test.print();
 
@@ -438,7 +448,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			//if (eval_dev.getAccuracy() > bestFmeasure) {
 			std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
 			bestFmeasure = eval_dev.getAccuracy();
-			writeModelFile(modelFile);
+			//writeModelFile(modelFile);
+			writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string(inputSize));
 			//}
 		}
 	}
@@ -457,11 +468,15 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	vector<vector<string> > testInstResults(testInsts.size());
 	Metric eval_test;
 	eval_test.reset();
+	clock_t start_time = clock(), end_time;
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstResults[idx]);
 		testInsts[idx].evaluate(testInstResults[idx], eval_test);
 		if (idx % 10000 == 0){
-			cout << idx / (float)testInsts.size() << "\r";
+			end_time = clock();
+			cout << idx / (float)testInsts.size();
+			cout << "  speed :" << (end_time - start_time) / CLOCKS_PER_SEC << "s per 1w sentence \r";
+			start_time = clock();
 			cout.flush();
 		}
 	}
@@ -502,6 +517,24 @@ void RespondGen::loadModelFile(const string& inputModelFile) {
 	cout << "Start loading model file..." << endl;
 	m_driver._hyperparams.loadModel(m_inf);
 	m_driver._modelparams.loadModel(m_inf, &m_driver.aligned_mem);
+	cout << "Model load complete !" << endl;
+	m_driver._hyperparams.print();
+}
+
+void RespondGen::loadPretrainModel(const string& inputModelFile) {
+	ifstream m_inf;
+	if (m_inf.is_open()) {
+		m_inf.close();
+		m_inf.clear();
+	}
+	m_inf.open(inputModelFile);
+
+	if (!m_inf.is_open()) {
+		cout << "LoadModelFile open file err: " << inputModelFile << endl;
+	}
+	cout << "Start loading model file..." << endl;
+	m_driver._hyperparams.loadModel(m_inf);
+	m_driver._modelparams.loadPretrainModel(m_inf, m_driver._hyperparams, &m_driver.aligned_mem);
 	cout << "Model load complete !" << endl;
 	m_driver._hyperparams.print();
 }

@@ -115,6 +115,44 @@ public:
 		state_hidden.load(is, mem);
 	}
 
+	void loadPretrainModel(std::ifstream &is, HyperParams &opts, AlignedMemoryPool* mem = NULL) {
+
+		opts.word_represent_dim = opts.word_dim * 2;
+		opts.word_window = 2 * opts.word_context + 1;
+		opts.word_input2conv = opts.word_represent_dim * opts.word_window;
+		opts.state_represent_dim = opts.word_rnnhiddensize * 2 + opts.action_rnnhiddensize;
+
+		word_conv.initial(opts.word_hiddensize, opts.word_input2conv, true, mem);
+		word_left_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
+		word_right_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
+
+		action_conv.initial(opts.action_hiddensize, opts.action_dim, opts.action_dim, true, mem);
+		action_lstm.initial(opts.action_dim, opts.action_hiddensize, mem);
+		state_hidden.initial(opts.state_hiddensize, opts.state_represent_dim, true, mem);
+
+		word_alpha.read(is);
+		word_table.initial(&word_alpha, opts.word_dim, true);
+		word_table.load(is, &word_alpha, mem);
+		word_ext_alphas.read(is);
+		word_ext_table.initial(&word_ext_alphas, opts.word_dim, false);
+		word_ext_table.load(is, &word_ext_alphas, mem);
+
+		word_conv.load(is, mem);
+		word_left_lstm.load(is, mem);
+		word_right_lstm.load(is, mem);
+
+		action_alpha.read(is);
+		action_table.initial(&action_alpha, opts.action_dim, true);
+		action_table.load(is, &action_alpha, mem);
+		action_conv.load(is, mem);
+		action_lstm.load(is, mem);
+
+		scored_action_table.initial(&action_alpha, opts.state_hiddensize, true);
+		scored_action_table.load(is, &action_alpha, mem);
+
+		state_hidden.load(is, mem);
+	}
+
 };
 
 #endif /* SRC_ModelParams_H_ */

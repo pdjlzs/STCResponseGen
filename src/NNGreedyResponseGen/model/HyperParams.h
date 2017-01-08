@@ -96,6 +96,7 @@ public:
 		is >> action_rnnhiddensize;
 		is >> state_hiddensize;
 		is >> unk_strategy;
+		is >> word_dim;
 
 		int size = 0;
 		is >> size;
@@ -183,6 +184,7 @@ public:
 		os << action_rnnhiddensize << endl;
 		os << state_hiddensize << endl;
 		os << unk_strategy << endl;
+		os << word_dim << endl;
 
 		os << trigram_candid.size() << endl;
 		unordered_map<string, vector<string> >::iterator umit = trigram_candid.begin();
@@ -239,6 +241,7 @@ public:
 		cout << "action_rnnhiddensize= " << action_rnnhiddensize << endl;
 		cout << "state_hiddensize= " << state_hiddensize << endl;
 		cout << "unk_strategy= " << unk_strategy << endl;
+		cout << "word_dim=" << word_dim << endl;
 	}
 
 private:

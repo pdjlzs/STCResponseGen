@@ -46,6 +46,7 @@ public:
 public:
 	void writeModelFile(const string& outputModelFile);
 	void loadModelFile(const string& inputModelFile);
+	void loadPretrainModel(const string& inputModelFile);
 
 };
 
