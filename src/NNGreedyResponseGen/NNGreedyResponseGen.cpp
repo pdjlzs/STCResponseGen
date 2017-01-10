@@ -466,16 +466,17 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	vector<Instance> testInsts;
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
 	vector<vector<string> > testInstResults(testInsts.size());
+	int verboseIter = testInsts.size() / 1000;
 	Metric eval_test;
 	eval_test.reset();
 	clock_t start_time = clock(), end_time;
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstResults[idx]);
 		testInsts[idx].evaluate(testInstResults[idx], eval_test);
-		if (idx % 10000 == 0){
+		if (idx % verboseIter == 0){
 			end_time = clock();
 			cout << idx / (float)testInsts.size();
-			cout << "  speed :" << (end_time - start_time) / CLOCKS_PER_SEC << "s per 1w sentence \r";
+			cout << "  speed :" << (end_time - start_time) / CLOCKS_PER_SEC << "s per " << verboseIter << " sentences \r";
 			start_time = clock();
 			cout.flush();
 		}
