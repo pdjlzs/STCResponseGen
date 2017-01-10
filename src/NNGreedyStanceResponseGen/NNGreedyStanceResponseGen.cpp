@@ -466,7 +466,7 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	vector<Instance> testInsts;
 	m_pipe.readInstances(testFile, testInsts, m_options.maxInstance);
 	vector<vector<string> > testInstResults(testInsts.size());
-	int verboseIter = testInsts.size() / 1000;
+	int verboseIter = testInsts.size() / 1000 + 1;
 	Metric eval_test;
 	eval_test.reset();
 	clock_t start_time = clock(), end_time;
