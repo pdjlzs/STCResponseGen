@@ -4,5 +4,6 @@ include_directories(
 )
 
 add_subdirectory(NNGreedyResponseGen)
+add_subdirectory(NNGreedyStanceResponseGen)
 
 
