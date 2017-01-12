@@ -464,7 +464,7 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	m_driver.testInitial();
 
 	vector<Instance> testInsts;
-	m_pipe.readInstances(testFile, testInsts, m_options.maxLength);
+	m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength);
 	vector<vector<string> > testInstResults(testInsts.size());
 	int verboseIter = testInsts.size() / 1000 + 1;
 	Metric eval_test;
