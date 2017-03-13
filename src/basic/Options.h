@@ -32,6 +32,7 @@ public:
 
 	int wordcontext;
 	string mapFile;
+	string lmFile;
 
 	int actionEmbSize;
 	int actionHiddenSize;
@@ -49,6 +50,7 @@ public:
 	int maxCandidAction;
 	
 	int unkStrategy;
+
 
 	Options() {
 		wordCutOff = 0;
@@ -72,6 +74,7 @@ public:
 
 		wordcontext = 2;
 		mapFile = "";
+		lmFile = "";
 
 		actionEmbSize = 20;
 		actionHiddenSize = 30;
@@ -137,6 +140,8 @@ public:
 
 			if (pr.first == "mapFile")
 				mapFile = pr.second;
+			if (pr.first == "lmFile")
+				lmFile = pr.second;
 
 			if (pr.first == "actionEmbSize")
 				actionEmbSize = atoi(pr.second.c_str());
@@ -200,6 +205,7 @@ public:
 		std::cout << "stateHiddenSize = " << state_hiddensize << std::endl;
 
 		std::cout << "mapFile = " << mapFile << std::endl;
+		std::cout << "lmFile = " << lmFile << std::endl;
 		std::cout << "wordEmbFile = " << wordEmbFile << std::endl;
 		for (int idx = 0; idx < testFiles.size(); idx++) {
 			std::cout << "testFile = " << testFiles[idx] << std::endl;

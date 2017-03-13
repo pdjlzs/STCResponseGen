@@ -5,8 +5,9 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 
 #debug
 #Windows
--l -train D:\data\STCRG\post_response.pair.rmemoji.clean -dev D:\data\STCRG\stcom.gold -model D:\data\STCRG\model -option D:\data\STCRG\optionx86.lstmgredy
--model D:\data\STCRG\model -test D:\data\STCRG\stcom.gold -output D:\data\STCRG\stcom.output
+#-l -train D:\data\STCRG\post_response.pair.rmemoji.clean -dev D:\data\STCRG\stcom.gold -model D:\data\STCRG\model -option D:\data\STCRG\optionx86.lstmgredy
+#-model D:\data\STCRG\model -test D:\data\STCRG\stcom.gold -output D:\data\STCRG\stcom.output
+-l -train D:\data\STCRG\post_resp.train -dev D:\data\STCRG\post_resp.dev -test D:\data\STCRG\post_resp.test -option D:\data\STCRG\optionx64.lstmgredy
 
 #run
 #linux

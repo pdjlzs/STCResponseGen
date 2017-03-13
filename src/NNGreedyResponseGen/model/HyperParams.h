@@ -19,6 +19,13 @@ struct HyperParams{
 	unordered_map<string, int> word_stat;
 
 
+	unordered_map<string, float > uni_pro;	// ui-gram dic for calculate perplexity
+	unordered_map<string, float > uni_back;	// ui-gram dic for calculate perplexity
+	unordered_map<string, float > bi_pro;	// bi-gram dic for calculate perplexity
+	unordered_map<string, float > bi_back;	// bi-gram dic for calculate perplexity
+	unordered_map<string, float > tri_pro;	// tri-gram dic calculate perplexity
+
+
 	dtype nnRegular; // for optimization
 	dtype adaAlpha;  // for optimization
 	dtype adaEps; // for optimization

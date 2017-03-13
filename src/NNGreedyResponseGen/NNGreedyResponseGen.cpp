@@ -37,6 +37,8 @@ int RespondGen::initialActionWordMap() {
 	if (!inf.is_open()) {
 		cout << "Candidate dic file open file err: " << m_options.mapFile << endl;
 	}
+
+
 	int maxCandidate = 0;
 	int dic_num = 0;
 	static string strLine;
@@ -72,6 +74,7 @@ int RespondGen::initialActionWordMap() {
 		}
 		dic_num++;
 	}
+	cout << endl;
 	inf.close();
 
 	int table_size;
@@ -84,7 +87,8 @@ int RespondGen::initialActionWordMap() {
 	for (it = word_map.begin(); it != word_map.end(); it++){
 		if (it->second.size() > max_candid_action){
 			if (it->first == "-start-#-start-") table_size = 1e6;
-			else if (it->second.size() >= 900) table_size = 1e5;
+			//else if (it->second.size() >= 900) table_size = 1e5;
+			else if (it->second.size() >= 400) table_size = 1e5;
 			else table_size = 1e4;
 			rand_tabel[it->first].resize(table_size);
 			double d1 = 0, train_words_pow = 0;
@@ -110,11 +114,66 @@ int RespondGen::initialActionWordMap() {
 			//}
 			int last_word_candi_index = rand_tabel[it->first][table_size - 1];
 			if (last_word_candi_index != it->second.size() - 1)
-				cout << "Error! Not all candidate are in the random tabel" << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
+				cout << "Error! Not all candidate are in the random tabel" << it->first << " " << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
 		}
 	}
 
 	cout << std::endl << "All max candidate action number = " << maxCandidate << endl;
+	cout << "Loading langtage modle file..." << endl;
+	if (inf.is_open()) {
+		inf.close();
+		inf.clear();
+	} 
+
+	inf.open(m_options.lmFile.c_str());
+	if (!inf.is_open()) {
+		cout << "Language model file open file err: " << m_options.lmFile << endl;
+	}
+
+	dic_num = 0;
+	while (1) {
+		if (!my_getline(inf, strLine)) {
+			break;
+		}
+		if (!strLine.empty()) {
+			float probabi = 0, backoff = 0;
+			vector<string> vecInfo;
+			split_bystr(strLine, vecInfo, "\t");
+			int len = vecInfo.size();
+			if (len > 1){
+				 probabi  = atof(vecInfo[0].c_str());
+				if (len == 3)
+					backoff = atof(vecInfo[2].c_str());
+				vector<string> gram_info;
+
+				split_bychar(vecInfo[1], gram_info, ' ');
+				if (gram_info.size() == 1) {
+					m_driver._hyperparams.uni_pro[gram_info[0]] = probabi;
+					if (backoff != 0)
+						m_driver._hyperparams.uni_back[gram_info[0]] = backoff;
+				}
+				else if (gram_info.size() == 2) {
+					m_driver._hyperparams.bi_pro[gram_info[0] + "#" + gram_info[1]] = probabi;
+					if (backoff != 0)
+						m_driver._hyperparams.bi_back[gram_info[0] + "#" + gram_info[1]] = backoff;
+				}
+				else if (gram_info.size() == 3) {
+					m_driver._hyperparams.tri_pro[gram_info[0] + "#" + gram_info[1] + "#" + gram_info[2]] = probabi;
+				}
+
+			}
+
+		}
+		if ((dic_num + 1) % (m_options.verboseIter * 100) == 0) {
+			cout << dic_num + 1 << " ";
+			if ((dic_num + 1) % (40 * m_options.verboseIter * 100) == 0)
+				cout << std::endl;
+			cout.flush();
+		}
+		dic_num++;
+	}
+	cout << endl;
+
 }
 
 // all linear features are extracted from positive examples
