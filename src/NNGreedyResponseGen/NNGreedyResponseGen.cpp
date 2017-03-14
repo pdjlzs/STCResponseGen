@@ -119,11 +119,11 @@ int RespondGen::initialActionWordMap() {
 	}
 
 	cout << std::endl << "All max candidate action number = " << maxCandidate << endl;
-	cout << "Loading langtage modle file..." << endl;
+	cout << "Loading language modle file..." << endl;
 	if (inf.is_open()) {
 		inf.close();
 		inf.clear();
-	} 
+	}
 
 	inf.open(m_options.lmFile.c_str());
 	if (!inf.is_open()) {
@@ -141,7 +141,7 @@ int RespondGen::initialActionWordMap() {
 			split_bystr(strLine, vecInfo, "\t");
 			int len = vecInfo.size();
 			if (len > 1){
-				 probabi  = atof(vecInfo[0].c_str());
+				probabi = atof(vecInfo[0].c_str());
 				if (len == 3)
 					backoff = atof(vecInfo[2].c_str());
 				vector<string> gram_info;
@@ -223,7 +223,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 
 		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(respon_output, eval);
+		instance.bIdentical(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -277,7 +277,7 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 
 		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(respon_output, eval);
+		instance.bIdentical(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -321,6 +321,28 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		m_pipe.readInstances(devFile, devInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
 	if (testFile != "")
 		m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
+
+	// test the perplexity model
+	/*
+	static Metric eval;
+	eval.reset();
+	for (int idx = 0; idx < devInsts.size(); idx++) {
+		devInsts[idx].evaluate(devInsts[idx].respon_words, eval, m_driver._hyperparams);
+		//eval.print();
+	}
+	std::cout << "dev:" << std::endl;
+	eval.print();
+
+	eval.reset();
+	for (int idx = 0; idx < testInsts.size(); idx++) {
+		testInsts[idx].evaluate(testInsts[idx].respon_words, eval, m_driver._hyperparams);
+		//eval.print();
+	}
+	std::cout << "test:" << std::endl;
+	eval.print();
+	*/
+
+
 
 	vector<vector<Instance> > otherInsts(m_options.testFiles.size());
 	for (int idx = 0; idx < m_options.testFiles.size(); idx++) {
@@ -442,7 +464,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			eval_dev.reset();
 			for (int idx = 0; idx < devInsts.size(); idx++) {
 				predict(devInsts[idx], curDecodeInst);
-				devInsts[idx].evaluate(curDecodeInst, eval_dev);
+				devInsts[idx].evaluate(curDecodeInst, eval_dev, m_driver._hyperparams);
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.push_back(curDecodeInst);
 				}
@@ -465,7 +487,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_test.reset();
 				for (int idx = 0; idx < testInsts.size(); idx++) {
 					predict(testInsts[idx], curDecodeInst);
-					testInsts[idx].evaluate(curDecodeInst, eval_test);
+					testInsts[idx].evaluate(curDecodeInst, eval_test, m_driver._hyperparams);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
 					}
@@ -488,7 +510,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_test.reset();
 				for (int idy = 0; idy < otherInsts[idx].size(); idy++) {
 					predict(otherInsts[idx][idy], curDecodeInst);
-					otherInsts[idx][idy].evaluate(curDecodeInst, eval_test);
+					otherInsts[idx][idy].evaluate(curDecodeInst, eval_test, m_driver._hyperparams);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
 						decodeInstResults.push_back(curDecodeInst);
@@ -531,7 +553,7 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	clock_t start_time = clock(), end_time;
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstResults[idx]);
-		testInsts[idx].evaluate(testInstResults[idx], eval_test);
+		testInsts[idx].evaluate(testInstResults[idx], eval_test, m_driver._hyperparams);
 		if (idx % verboseIter == 0){
 			end_time = clock();
 			cout << idx / (float)testInsts.size();
