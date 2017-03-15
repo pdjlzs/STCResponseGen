@@ -324,7 +324,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	// test the perplexity model
 	/*
-	static Metric eval;
+	static Evaluation eval;
 	eval.reset();
 	for (int idx = 0; idx < devInsts.size(); idx++) {
 		devInsts[idx].evaluate(devInsts[idx].respon_words, eval, m_driver._hyperparams);
@@ -380,7 +380,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	for (int i = 0; i < inputSize; ++i)
 		indexes.push_back(i);
 
-	static Metric eval_train, eval_dev, eval_test;
+	static Metric eval_train;
+	static Evaluation eval_dev, eval_test;
 
 	int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
 	//int oneIterMaxRound = (inputSize + m_options.batchSize - 1) / m_options.batchSize;
@@ -528,7 +529,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 			//if (eval_dev.getAccuracy() > bestFmeasure) {
 			std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
-			bestFmeasure = eval_dev.getAccuracy();
+			bestFmeasure = eval_dev.getPerplexity();
 			//writeModelFile(modelFile);
 			writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string(inputSize));
 			//}
@@ -548,7 +549,7 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength);
 	vector<vector<string> > testInstResults(testInsts.size());
 	int verboseIter = testInsts.size() / 1000 + 1;
-	Metric eval_test;
+	Evaluation eval_test;
 	eval_test.reset();
 	clock_t start_time = clock(), end_time;
 	for (int idx = 0; idx < testInsts.size(); idx++) {

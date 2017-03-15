@@ -8,6 +8,7 @@
 #include "N3L.h"
 #include "Metric.h"
 #include "HyperParams.h"
+#include "Evaluation.h"
 
 using namespace std;
 
@@ -103,7 +104,7 @@ public:
 
 	}
 
-	void evaluate(const vector<string>& resulted_respon, Metric& eval, HyperParams& opts) const {
+	void evaluate(const vector<string>& resulted_respon, Evaluation& eval, HyperParams& opts) const {
 
 		vector<string> sent;
 		for (int index = 0; index < resulted_respon.size(); index++)
