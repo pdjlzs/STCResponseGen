@@ -198,6 +198,8 @@ public:
 	vector<string> post_words;
 	vector<string> respon_words;
 	vector<string> respon_chars;
+	string emotion;
+	string stance;
 };
 
 #endif

@@ -47,9 +47,16 @@ public:
 
 		getCharactersFromUTF8String(vecLine[1], charInfo);
 
-		m_instance.allocate(postwordInfo.size(), responsewordInfo.size(), charInfo.size());
-		for (int i = 0; i < postwordInfo.size(); ++i) {
-			m_instance.post_words[i] = postwordInfo[i];
+		int offset = 0;
+		if (postwordInfo[0].find("[PO]POLAR#") != std::string::npos){
+			m_instance.emotion = postwordInfo[0];
+			m_instance.stance = postwordInfo[1];
+			offset = 2;
+		}
+
+		m_instance.allocate(postwordInfo.size() - offset, responsewordInfo.size(), charInfo.size());
+		for (int i = offset; i < postwordInfo.size() ; ++i) {
+			m_instance.post_words[i - offset] = postwordInfo[i];
 		}
 		for (int i = 0; i < responsewordInfo.size(); i++){
 			m_instance.respon_words[i] = responsewordInfo[i];

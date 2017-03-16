@@ -37,6 +37,8 @@ int RespondGen::initialActionWordMap() {
 	if (!inf.is_open()) {
 		cout << "Candidate dic file open file err: " << m_options.mapFile << endl;
 	}
+
+
 	int maxCandidate = 0;
 	int dic_num = 0;
 	static string strLine;
@@ -72,6 +74,7 @@ int RespondGen::initialActionWordMap() {
 		}
 		dic_num++;
 	}
+	cout << endl;
 	inf.close();
 
 	int table_size;
@@ -84,7 +87,8 @@ int RespondGen::initialActionWordMap() {
 	for (it = word_map.begin(); it != word_map.end(); it++){
 		if (it->second.size() > max_candid_action){
 			if (it->first == "-start-#-start-") table_size = 1e6;
-			else if (it->second.size() >= 900) table_size = 1e5;
+			//else if (it->second.size() >= 900) table_size = 1e5;
+			else if (it->second.size() >= 400) table_size = 1e5;
 			else table_size = 1e4;
 			rand_tabel[it->first].resize(table_size);
 			double d1 = 0, train_words_pow = 0;
@@ -110,11 +114,66 @@ int RespondGen::initialActionWordMap() {
 			//}
 			int last_word_candi_index = rand_tabel[it->first][table_size - 1];
 			if (last_word_candi_index != it->second.size() - 1)
-				cout << "Error! Not all candidate are in the random tabel" << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
+				cout << "Error! Not all candidate are in the random tabel" << it->first << " " << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
 		}
 	}
 
 	cout << std::endl << "All max candidate action number = " << maxCandidate << endl;
+	cout << "Loading language modle file..." << endl;
+	if (inf.is_open()) {
+		inf.close();
+		inf.clear();
+	}
+
+	inf.open(m_options.lmFile.c_str());
+	if (!inf.is_open()) {
+		cout << "Language model file open file err: " << m_options.lmFile << endl;
+	}
+
+	dic_num = 0;
+	while (1) {
+		if (!my_getline(inf, strLine)) {
+			break;
+		}
+		if (!strLine.empty()) {
+			float probabi = 0, backoff = 0;
+			vector<string> vecInfo;
+			split_bystr(strLine, vecInfo, "\t");
+			int len = vecInfo.size();
+			if (len > 1){
+				probabi = atof(vecInfo[0].c_str());
+				if (len == 3)
+					backoff = atof(vecInfo[2].c_str());
+				vector<string> gram_info;
+
+				split_bychar(vecInfo[1], gram_info, ' ');
+				if (gram_info.size() == 1) {
+					m_driver._hyperparams.uni_pro[gram_info[0]] = probabi;
+					if (backoff != 0)
+						m_driver._hyperparams.uni_back[gram_info[0]] = backoff;
+				}
+				else if (gram_info.size() == 2) {
+					m_driver._hyperparams.bi_pro[gram_info[0] + "#" + gram_info[1]] = probabi;
+					if (backoff != 0)
+						m_driver._hyperparams.bi_back[gram_info[0] + "#" + gram_info[1]] = backoff;
+				}
+				else if (gram_info.size() == 3) {
+					m_driver._hyperparams.tri_pro[gram_info[0] + "#" + gram_info[1] + "#" + gram_info[2]] = probabi;
+				}
+
+			}
+
+		}
+		if ((dic_num + 1) % (m_options.verboseIter * 100) == 0) {
+			cout << dic_num + 1 << " ";
+			if ((dic_num + 1) % (40 * m_options.verboseIter * 100) == 0)
+				cout << std::endl;
+			cout.flush();
+		}
+		dic_num++;
+	}
+	cout << endl;
+
 }
 
 // all linear features are extracted from positive examples
@@ -164,7 +223,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 
 		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(respon_output, eval);
+		instance.bIdentical(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -218,7 +277,7 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 
 		state[actionNum].getSegResults(respon_output);
 
-		instance.evaluate(respon_output, eval);
+		instance.bIdentical(respon_output, eval);
 
 		if (!eval.bIdentical()) {
 			std::cout << "error state conversion!" << std::endl;
@@ -263,6 +322,28 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	if (testFile != "")
 		m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
 
+	// test the perplexity model
+	/*
+	static Evaluation eval;
+	eval.reset();
+	for (int idx = 0; idx < devInsts.size(); idx++) {
+	devInsts[idx].evaluate(devInsts[idx].respon_words, eval, m_driver._hyperparams);
+	//eval.print();
+	}
+	std::cout << "dev:" << std::endl;
+	eval.print();
+
+	eval.reset();
+	for (int idx = 0; idx < testInsts.size(); idx++) {
+	testInsts[idx].evaluate(testInsts[idx].respon_words, eval, m_driver._hyperparams);
+	//eval.print();
+	}
+	std::cout << "test:" << std::endl;
+	eval.print();
+	*/
+
+
+
 	vector<vector<Instance> > otherInsts(m_options.testFiles.size());
 	for (int idx = 0; idx < m_options.testFiles.size(); idx++) {
 		m_pipe.readInstances(m_options.testFiles[idx], otherInsts[idx], m_driver._hyperparams.maxlength, m_options.maxInstance);
@@ -291,7 +372,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	vector<vector<CAction> > trainInstGoldactions;
 	getGoldActions(trainInsts, trainInstGoldactions);
-	double bestFmeasure = 0;
+	double bestPerplex = 10000;
 
 	int inputSize = trainInsts.size();
 
@@ -299,7 +380,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	for (int i = 0; i < inputSize; ++i)
 		indexes.push_back(i);
 
-	static Metric eval_train, eval_dev, eval_test;
+	static Metric eval_train;
+	static Evaluation eval_dev, eval_test;
 
 	int maxIter = m_options.maxIter * (inputSize / m_options.batchSize + 1);
 	//int oneIterMaxRound = (inputSize + m_options.batchSize - 1) / m_options.batchSize;
@@ -344,8 +426,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				}
 				m_driver.updateModel();
 
-				if ((idy + 1) % (int)1e5 == 0) {
-					writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string((idy + 1) / (int)1e5));
+				if ((idy + 1) % (int)1e7 == 0) {
+					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e5));
 				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
@@ -383,7 +465,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			eval_dev.reset();
 			for (int idx = 0; idx < devInsts.size(); idx++) {
 				predict(devInsts[idx], curDecodeInst);
-				devInsts[idx].evaluate(curDecodeInst, eval_dev);
+				devInsts[idx].evaluate(curDecodeInst, eval_dev, m_driver._hyperparams);
 				if (!m_options.outBest.empty()) {
 					decodeInstResults.push_back(curDecodeInst);
 				}
@@ -392,10 +474,10 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			std::cout << "dev:" << std::endl;
 			eval_dev.print();
 
-			//if (!m_options.outBest.empty() && eval_dev.getAccuracy() > bestFmeasure) {
-			m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
-			bCurIterBetter = true;
-			//}
+			if (!m_options.outBest.empty() && eval_dev.getPerplexity() < bestPerplex) {
+				m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
+				bCurIterBetter = true;
+			}
 
 			if (testNum > 0) {
 				time_start = clock();
@@ -406,7 +488,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_test.reset();
 				for (int idx = 0; idx < testInsts.size(); idx++) {
 					predict(testInsts[idx], curDecodeInst);
-					testInsts[idx].evaluate(curDecodeInst, eval_test);
+					testInsts[idx].evaluate(curDecodeInst, eval_test, m_driver._hyperparams);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
 					}
@@ -429,7 +511,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				eval_test.reset();
 				for (int idy = 0; idy < otherInsts[idx].size(); idy++) {
 					predict(otherInsts[idx][idy], curDecodeInst);
-					otherInsts[idx][idy].evaluate(curDecodeInst, eval_test);
+					otherInsts[idx][idy].evaluate(curDecodeInst, eval_test, m_driver._hyperparams);
 					if (bCurIterBetter && !m_options.outBest.empty()) {
 						decodeInstResults.push_back(curDecodeInst);
 						decodeInstResults.push_back(curDecodeInst);
@@ -445,12 +527,12 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			}
 
 
-			//if (eval_dev.getAccuracy() > bestFmeasure) {
-			std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
-			bestFmeasure = eval_dev.getAccuracy();
-			//writeModelFile(modelFile);
-			writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string(inputSize));
-			//}
+			if (eval_dev.getPerplexity() < bestPerplex) {
+				std::cout << "Exceeds best previous DIS of " << bestPerplex << ". Saving model file.." << std::endl;
+				bestPerplex = eval_dev.getPerplexity();
+				writeModelFile(modelFile + std::to_string(iter) + ".best");
+			}
+			writeModelFile(modelFile + std::to_string(iter));
 		}
 	}
 }
@@ -467,12 +549,12 @@ void RespondGen::test(const string& testFile, const string& outputFile, const st
 	m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength);
 	vector<vector<string> > testInstResults(testInsts.size());
 	int verboseIter = testInsts.size() / 1000 + 1;
-	Metric eval_test;
+	Evaluation eval_test;
 	eval_test.reset();
 	clock_t start_time = clock(), end_time;
 	for (int idx = 0; idx < testInsts.size(); idx++) {
 		predict(testInsts[idx], testInstResults[idx]);
-		testInsts[idx].evaluate(testInstResults[idx], eval_test);
+		testInsts[idx].evaluate(testInstResults[idx], eval_test, m_driver._hyperparams);
 		if (idx % verboseIter == 0){
 			end_time = clock();
 			cout << idx / (float)testInsts.size();
