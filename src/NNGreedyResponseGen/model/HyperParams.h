@@ -171,6 +171,51 @@ public:
 			word_stat[cur_word] = freq;
 		}
 
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float unipro;
+			is >> unipro;
+			uni_pro[cur_word] = unipro;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float uniback;
+			is >> uniback;
+			uni_back[cur_word] = uniback;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float bipro;
+			is >> bipro;
+			bi_pro[cur_word] = bipro;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float biback;
+			is >> biback;
+			bi_back[cur_word] = biback;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float tripro;
+			is >> tripro;
+			tri_pro[cur_word] = tripro;
+		}
+
 	}
 
 	void saveModel(std::ofstream &os) {
@@ -217,6 +262,36 @@ public:
 		for (; umit2 != word_stat.end(); umit2++){
 			os << umit2->first << " " << umit2->second << endl;
 		}
+
+		os << uni_pro.size() << endl;
+		unordered_map<string, float> ::iterator umft1 = uni_pro.begin();
+		for (; umft1 != uni_pro.end(); umft1++){
+			os << umft1->first << " " << umft1->second << endl;
+		}
+
+
+		os << uni_back.size() << endl;
+		unordered_map<string, float> ::iterator umft11 = uni_back.begin();
+		for (; umft11 != uni_back.end(); umft11++){
+			os << umft11->first << " " << umft11->second << endl;
+		}
+
+		os << bi_pro.size() << endl;
+		unordered_map<string, float> ::iterator umft2 = bi_pro.begin();
+		for (; umft2 != bi_pro.end(); umft2++){
+			os << umft2->first << " " << umft2->second << endl;
+		}
+		os << bi_back.size() << endl;
+		unordered_map<string, float> ::iterator umft22 = bi_back.begin();
+		for (; umft22 != bi_back.end(); umft22++){
+			os << umft22->first << " " << umft22->second << endl;
+		}
+		os << tri_pro.size() << endl;
+		unordered_map<string, float> ::iterator umft3 = tri_pro.begin();
+		for (; umft3 != tri_pro.end(); umft3++){
+			os << umft3->first << " " << umft3->second << endl;
+		}
+
 
 	}
 	void clear(){

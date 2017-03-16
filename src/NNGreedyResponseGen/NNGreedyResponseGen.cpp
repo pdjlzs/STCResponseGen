@@ -327,16 +327,16 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	static Evaluation eval;
 	eval.reset();
 	for (int idx = 0; idx < devInsts.size(); idx++) {
-		devInsts[idx].evaluate(devInsts[idx].respon_words, eval, m_driver._hyperparams);
-		//eval.print();
+	devInsts[idx].evaluate(devInsts[idx].respon_words, eval, m_driver._hyperparams);
+	//eval.print();
 	}
 	std::cout << "dev:" << std::endl;
 	eval.print();
 
 	eval.reset();
 	for (int idx = 0; idx < testInsts.size(); idx++) {
-		testInsts[idx].evaluate(testInsts[idx].respon_words, eval, m_driver._hyperparams);
-		//eval.print();
+	testInsts[idx].evaluate(testInsts[idx].respon_words, eval, m_driver._hyperparams);
+	//eval.print();
 	}
 	std::cout << "test:" << std::endl;
 	eval.print();
@@ -372,7 +372,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 	vector<vector<CAction> > trainInstGoldactions;
 	getGoldActions(trainInsts, trainInstGoldactions);
-	double bestFmeasure = 0;
+	double bestPerplex = 10000;
 
 	int inputSize = trainInsts.size();
 
@@ -426,8 +426,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				}
 				m_driver.updateModel();
 
-				if ((idy + 1) % (int)1e5 == 0) {
-					writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string((idy + 1) / (int)1e5));
+				if ((idy + 1) % (int)1e7 == 0) {
+					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e5));
 				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
@@ -474,10 +474,10 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			std::cout << "dev:" << std::endl;
 			eval_dev.print();
 
-			//if (!m_options.outBest.empty() && eval_dev.getAccuracy() > bestFmeasure) {
-			m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
-			bCurIterBetter = true;
-			//}
+			if (!m_options.outBest.empty() && eval_dev.getPerplexity() < bestPerplex) {
+				m_pipe.outputAllInstances(devFile + m_options.outBest, devInsts, decodeInstResults);
+				bCurIterBetter = true;
+			}
 
 			if (testNum > 0) {
 				time_start = clock();
@@ -527,12 +527,12 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			}
 
 
-			//if (eval_dev.getAccuracy() > bestFmeasure) {
-			std::cout << "Exceeds best previous DIS of " << bestFmeasure << ". Saving model file.." << std::endl;
-			bestFmeasure = eval_dev.getPerplexity();
-			//writeModelFile(modelFile);
-			writeModelFile(modelFile + std::to_string(iter) + "." + std::to_string(inputSize));
-			//}
+			if (eval_dev.getPerplexity() < bestPerplex) {
+				std::cout << "Exceeds best previous DIS of " << bestPerplex << ". Saving model file.." << std::endl;
+				bestPerplex = eval_dev.getPerplexity();
+				writeModelFile(modelFile + std::to_string(iter) + ".best");
+			}
+			writeModelFile(modelFile + std::to_string(iter));
 		}
 	}
 }
