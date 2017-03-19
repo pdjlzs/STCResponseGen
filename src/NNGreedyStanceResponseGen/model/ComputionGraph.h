@@ -69,7 +69,7 @@ public:
 
 public:
 	// some nodes may behave different during training and decode, for example, dropout
-	inline int forward(const vector<string>& words, const vector<CAction> *goldAC = NULL) {
+	inline int forward(const Instance& inst, const vector<CAction> *goldAC = NULL) {
 		//first step, clear node values
 		if (goldAC != NULL) {
 			clearValue(true);  //train
@@ -78,7 +78,8 @@ public:
 			clearValue(false); // decode
 		}
 
-		globalNodes.forward(this, words, pOpts);
+		const vector<string>& words = inst.post_words;
+		globalNodes.forward(this, inst, pOpts);
 		//second step, build graph
 		static CStateItem *pGenerator;
 		static int step, offset;

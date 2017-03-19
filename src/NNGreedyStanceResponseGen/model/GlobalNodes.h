@@ -46,7 +46,9 @@ public:
 
 
 public:
-	inline void forward(Graph* cg, const vector<string>& words, HyperParams* hyparams){
+	inline void forward(Graph* cg, const Instance& inst, HyperParams* hyparams){
+		const vector<string>& words = inst.post_words;
+		string stance = inst.stance;
 		string currWord;
 		int word_size = words.size();
 		for (int idx = 0; idx < word_size; idx++){

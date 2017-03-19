@@ -3,7 +3,6 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/ -DMKL=TRUE
 
 #Nomal
-
 #Windows
 -l -train D:\data\STCRG\post_resp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
 -model D:\data\STCRG\model -test D:\data\STCRG\emotResp.test -output D:\data\STCRG\emotResp.test.output
@@ -13,7 +12,6 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 ~/workspace/STCResponseGen/bin/NNGreedyResponseGen  -model modelfile -test ~/data/STCRG/stcom.gold -output stcom.output
 
 #Stance
-
 #Windows
 -l -train D:\data\STCRG\post_resp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
 -model D:\data\STCRG\model -test D:\data\STCRG\emotResp.test -output D:\data\STCRG\emotResp.test.output

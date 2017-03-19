@@ -99,14 +99,14 @@ public:
 	}
 
 public:
-  dtype train(const std::vector<std::vector<string> >& sentences, const vector<vector<CAction> >& goldACs) {
+  dtype train(const std::vector<Instance>& sentences, const vector<vector<CAction> >& goldACs) {
     _eval.reset();
     dtype cost = 0.0;
 	int num = sentences.size();
 	for (int idx = 0; idx < num; idx++) {
 		_pcg->forward(sentences[idx], &goldACs[idx]);
 
-		int seq_size = sentences[idx].size();
+		int seq_size = sentences[idx].responWordsize();
 		_eval.overall_label_count += seq_size + 1;
 		cost += loss_google(num);
 

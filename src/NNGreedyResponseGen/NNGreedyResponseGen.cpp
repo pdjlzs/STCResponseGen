@@ -426,8 +426,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				}
 				m_driver.updateModel();
 
-				if ((idy + 1) % (int)1e7 == 0) {
-					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e5));
+				if ((idy + 1) % (int)1e6 == 0) {
+					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e6));
 				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;

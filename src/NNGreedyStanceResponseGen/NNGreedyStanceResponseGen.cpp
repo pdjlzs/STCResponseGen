@@ -391,7 +391,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	static vector<vector<string> > decodeInstResults;
 	static vector<string> curDecodeInst;
 	static bool bCurIterBetter;
-	static vector<vector<string> > subInstances;
+	static vector<Instance> subInstances;
 	static vector<vector<CAction> > subInstGoldActions;
 	static Instance inst;
 	static vector<CAction> actions;
@@ -410,7 +410,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			for (int idy = 0; idy < inputSize; idy++) {
 				subInstances.clear();
 				subInstGoldActions.clear();
-				subInstances.push_back(trainInsts[indexes[idy]].post_words);
+				subInstances.push_back(trainInsts[indexes[idy]]);
 				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
 
 				double cost = m_driver.train(subInstances, subInstGoldActions);
@@ -426,8 +426,8 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 				}
 				m_driver.updateModel();
 
-				if ((idy + 1) % (int)1e7 == 0) {
-					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e5));
+				if ((idy + 1) % (int)1e6 == 0) {
+					writeModelFile(modelFile + std::to_string(iter) + ".temp" + std::to_string((idy + 1) / (int)1e6));
 				}
 			}
 			std::cout << "current: " << iter + 1 << ", Correct(%) = " << eval_train.getAccuracy() << std::endl;
@@ -437,7 +437,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			subInstances.clear();
 			subInstGoldActions.clear();
 			for (int idy = 0; idy < m_options.batchSize; idy++) {
-				subInstances.push_back(trainInsts[indexes[idy]].post_words);
+				subInstances.push_back(trainInsts[indexes[idy]]);
 				subInstGoldActions.push_back(trainInstGoldactions[indexes[idy]]);
 
 			}
