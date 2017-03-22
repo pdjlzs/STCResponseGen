@@ -186,7 +186,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	int count = 0;
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance &instance = vecInsts[numInstance];
-		const string &labelFeat = instance.stance_label; 
+		const string &labelFeat = instance.stance_label;
 		for (int idx = 0; idx < instance.postWordsize(); idx++) {
 			m_driver._hyperparams.word_stat[normalize_to_lowerwithdigit(instance.post_words[idx])]++;
 		}
@@ -307,9 +307,26 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	if (optionFile != "")
 		m_options.load(optionFile);
 
+	vector<Instance> trainInsts, devInsts, testInsts;
+	std::cout << "Loading train, dev, test corpus ... " << std::endl;
+	m_pipe.readInstances(trainFile, trainInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
+	if (devFile != "")
+		m_pipe.readInstances(devFile, devInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
+	if (testFile != "")
+		m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
+
+
 	ifstream inf;
 	inf.open(modelFile.c_str());
 	if (inf.is_open()) {
+		for (int numInstance = 0; numInstance < trainInsts.size(); numInstance++) {
+			const Instance &instance = trainInsts[numInstance];
+			const string &labelFeat = instance.stance_label;
+			m_driver._hyperparams.m_labelfeat_stats[labelFeat]++;
+		}
+		m_driver._modelparams.labelFeatAlpha.initial(m_driver._hyperparams.m_labelfeat_stats);
+		m_driver._modelparams.labelFeats.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
+
 		loadPretrainModel(modelFile);
 		m_driver.preTrainInitial();
 	}
@@ -319,14 +336,6 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		initialActionWordMap();
 	}
 
-
-	vector<Instance> trainInsts, devInsts, testInsts;
-	std::cout << "Loading train, dev, test corpus ... " << std::endl;
-	m_pipe.readInstances(trainFile, trainInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
-	if (devFile != "")
-		m_pipe.readInstances(devFile, devInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
-	if (testFile != "")
-		m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
 
 	// test the perplexity model
 	/*
@@ -626,7 +635,7 @@ void RespondGen::loadPretrainModel(const string& inputModelFile) {
 		cout << "LoadModelFile open file err: " << inputModelFile << endl;
 	}
 	cout << "Start loading model file..." << endl;
-	m_driver._hyperparams.loadModel(m_inf);
+	m_driver._hyperparams.preloadModel(m_inf);
 	m_driver._modelparams.loadPretrainModel(m_inf, m_driver._hyperparams, &m_driver.aligned_mem);
 	cout << "Model load complete !" << endl;
 	m_driver._hyperparams.print();

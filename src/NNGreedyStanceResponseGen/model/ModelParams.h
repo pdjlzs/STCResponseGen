@@ -130,10 +130,11 @@ public:
 
 	void loadPretrainModel(std::ifstream &is, HyperParams &opts, AlignedMemoryPool* mem = NULL) {
 
+		opts.labelFeatDim = labelFeats.nDim;
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
 		opts.word_input2conv = opts.word_represent_dim * opts.word_window;
-		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim) * 2 + opts.labelFeatDim + opts.action_rnnhiddensize;
+		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim) * 2 + opts.action_rnnhiddensize;
 
 		word_conv.initial(opts.word_hiddensize, opts.word_input2conv, true, mem);
 		word_left_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
@@ -149,8 +150,6 @@ public:
 		word_ext_alphas.read(is);
 		word_ext_table.initial(&word_ext_alphas, opts.word_dim, false);
 		word_ext_table.load(is, &word_ext_alphas, mem);
-		labelFeatAlpha.read(is);
-		labelFeats.load(is, &labelFeatAlpha, mem);
 
 		word_conv.load(is, mem);
 		word_left_lstm.load(is, mem);

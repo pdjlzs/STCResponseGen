@@ -87,6 +87,141 @@ public:
 
 	}
 
+	void preloadModel(std::ifstream &is) {
+		is >> maxlength;
+		is >> action_num;
+		is >> maxCandidAction;
+		is >> delta;
+		is >> bAssigned;
+		is >> nnRegular;
+		is >> adaAlpha;
+		is >> adaEps;
+		is >> dropProb;
+		is >> word_context;
+		is >> word_hiddensize;
+		is >> word_rnnhiddensize;
+		is >> action_dim;
+		is >> action_hiddensize;
+		is >> action_rnnhiddensize;
+		is >> state_hiddensize;
+		is >> unk_strategy;
+		is >> word_dim;
+
+		int size = 0;
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string bigram_word;
+			is >> bigram_word;
+			int tempsize;
+			is >> tempsize;
+			for (int j = 0; j < tempsize; j++){
+				string cur_word;
+				is >> cur_word;
+				trigram_candid[bigram_word].push_back(cur_word);
+			}
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			int freq;
+			is >> freq;
+			triword_stat[cur_word] = freq;
+		}
+
+		int table_size;
+		const float power = 0.75;
+		unordered_map<string, vector<string> >::iterator it;
+		for (it = trigram_candid.begin(); it != trigram_candid.end(); it++){
+			if (it->second.size() > maxCandidAction){
+				if (it->first == "-start-#-start-") table_size = 1e6;
+				else if (it->second.size() >= 900) table_size = 1e5;
+				else table_size = 1e4;
+				random_tabel[it->first].resize(table_size);
+				double d1 = 0, train_words_pow = 0;
+				vector<int> vocab;
+				for (int i = 0; i < it->second.size(); i++){
+					string trigram_words = it->first + "#" + it->second[i];
+					int trigram_freq = triword_stat[trigram_words];
+					train_words_pow += pow(trigram_freq, power);
+					vocab.push_back(trigram_freq);
+				}
+				int i = 0;
+				d1 = pow(vocab[i], power) / train_words_pow;
+				for (int a = 0; a < table_size; a++) {
+					random_tabel[it->first][a] = i;
+					if (a / (double)table_size > d1) {
+						i++;
+						d1 += pow(vocab[i], power) / train_words_pow;
+					}
+					if (i >= vocab.size()) i = vocab.size() - 1;
+				}
+				int last_word_candi_index = random_tabel[it->first][table_size - 1];
+				if (last_word_candi_index != it->second.size() - 1)
+					cout << "Error! Not all candidate are in the random tabel" << last_word_candi_index << "!=" << it->second.size() - 1 << endl;
+			}
+		}
+
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			int freq;
+			is >> freq;
+			word_stat[cur_word] = freq;
+		}
+
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float unipro;
+			is >> unipro;
+			uni_pro[cur_word] = unipro;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float uniback;
+			is >> uniback;
+			uni_back[cur_word] = uniback;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float bipro;
+			is >> bipro;
+			bi_pro[cur_word] = bipro;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float biback;
+			is >> biback;
+			bi_back[cur_word] = biback;
+		}
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			float tripro;
+			is >> tripro;
+			tri_pro[cur_word] = tripro;
+		}
+
+	}
+
+
 	void loadModel(std::ifstream &is) {
 		is >> maxlength;
 		is >> action_num;
