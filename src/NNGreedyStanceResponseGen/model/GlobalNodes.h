@@ -2,6 +2,7 @@
 #define SRC_GlobalNodes_H_
 
 #include "ModelParams.h"
+#include "Instance.h"
 
 struct GlobalNodes {
 	vector<LookupNode> word_inputs;
@@ -13,6 +14,9 @@ struct GlobalNodes {
 	LSTM1Builder words_right_lstm;
 	PNode word_left_lstm;
 	PNode word_right_lstm;
+	LookupNode stance_label;
+	ConcatNode left_concat_labelFeat;
+	ConcatNode right_concat_labelFeat;
 
 public:
 	inline void resize(int max_length) {
@@ -42,13 +46,21 @@ public:
 		word_window.init(opts.word_represent_dim, opts.word_context, mem);
 		words_left_lstm.init(&params.word_left_lstm, opts.dropProb, true, mem);
 		words_right_lstm.init(&params.word_right_lstm, opts.dropProb, false, mem);
+
+		stance_label.init(params.labelFeats.nDim, opts.dropProb, mem);
+		stance_label.setParam(&params.labelFeats);
+		left_concat_labelFeat.init(opts.word_rnnhiddensize + params.labelFeats.nDim, -1, mem);
+		right_concat_labelFeat.init(opts.word_rnnhiddensize + params.labelFeats.nDim, -1, mem);
 	}
 
 
 public:
 	inline void forward(Graph* cg, const Instance& inst, HyperParams* hyparams){
 		const vector<string>& words = inst.post_words;
-		string stance = inst.stance;
+		string stance = inst.stance_label;
+		stance_label.forward(cg, stance);
+
+
 		string currWord;
 		int word_size = words.size();
 		for (int idx = 0; idx < word_size; idx++){
@@ -76,8 +88,11 @@ public:
 		words_left_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
 		words_right_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
 
-		word_left_lstm = &words_left_lstm._hiddens[word_size - 1];
-		word_right_lstm = &words_right_lstm._hiddens[0];
+		left_concat_labelFeat.forward(cg, &stance_label, &words_left_lstm._hiddens[word_size - 1]);
+		right_concat_labelFeat.forward(cg, &stance_label, &words_right_lstm._hiddens[0]);
+
+		word_left_lstm = &left_concat_labelFeat;
+		word_right_lstm = &right_concat_labelFeat;
 	}
 
 };

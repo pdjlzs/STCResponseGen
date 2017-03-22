@@ -49,8 +49,8 @@ public:
 
 		int offset = 0;
 		if (postwordInfo[0].find("[PO]POLAR#") != std::string::npos){
-			m_instance.emotion = postwordInfo[0];
-			m_instance.stance = postwordInfo[1];
+			m_instance.emotion_label = postwordInfo[0];
+			m_instance.stance_label = postwordInfo[1];
 			offset = 2;
 		}
 

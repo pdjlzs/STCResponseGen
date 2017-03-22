@@ -55,6 +55,8 @@ public:
 		for (int i = 0; i < anInstance.responCharsize(); i++) {
 			respon_chars[i] = anInstance.respon_chars[i];
 		}
+		stance_label = anInstance.stance_label;
+		emotion_label = anInstance.emotion_label;
 	}
 
 	double getUnigram(const string& cur_word, HyperParams& opts) const{
@@ -198,8 +200,8 @@ public:
 	vector<string> post_words;
 	vector<string> respon_words;
 	vector<string> respon_chars;
-	string emotion;
-	string stance;
+	string emotion_label;
+	string stance_label;
 };
 
 #endif

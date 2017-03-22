@@ -117,8 +117,8 @@ public:
     return cost;
   }
 
-  void decode(const std::vector<string>& sentence, vector<string>& resp_result){
-	  _pcg->forward(sentence);
+  void decode(const Instance& inst, vector<string>& resp_result){
+	  _pcg->forward(inst);
 	  predict(resp_result);
   }
 

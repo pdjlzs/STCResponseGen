@@ -51,6 +51,8 @@ public:
 	
 	int unkStrategy;
 
+	int labelFeatEmbSize;
+	bool labelFeatEmbFineTune;
 
 	Options() {
 		wordCutOff = 0;
@@ -90,6 +92,10 @@ public:
 		maxCandidAction = 100;
 
 		unkStrategy = 0;
+
+		labelFeatEmbSize = 50;
+		labelFeatEmbFineTune = true;
+
 	}
 
 	virtual ~Options() {
@@ -168,6 +174,11 @@ public:
 			if (pr.first == "unkStrategy")
 				unkStrategy = atoi(pr.second.c_str());
 
+			if (pr.first == "labelFeatEmbSize")
+				labelFeatEmbSize = atoi(pr.second.c_str());
+			if (pr.first == "labelFeatEmbFineTune")
+				labelFeatEmbFineTune = (pr.second == "true") ? true : false;
+
 		}
 	}
 
@@ -203,6 +214,9 @@ public:
 		std::cout << "actionRNNHiddenSize = " << actionRNNHiddenSize << std::endl;
 
 		std::cout << "stateHiddenSize = " << state_hiddensize << std::endl;
+
+		std::cout << "labelFeatEmbSize = " << labelFeatEmbSize << std::endl;
+		std::cout << "labelFeatEmbFineTune = " << labelFeatEmbFineTune << std::endl;
 
 		std::cout << "mapFile = " << mapFile << std::endl;
 		std::cout << "lmFile = " << lmFile << std::endl;

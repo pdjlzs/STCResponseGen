@@ -13,7 +13,7 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 
 #Stance
 #Windows
--l -train D:\data\STCRG\post_resp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
+-l -train D:\data\STCRG\emotResp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
 -model D:\data\STCRG\model -test D:\data\STCRG\emotResp.test -output D:\data\STCRG\emotResp.test.output
 
 #linux

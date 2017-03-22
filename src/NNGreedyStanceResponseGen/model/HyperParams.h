@@ -50,6 +50,7 @@ struct HyperParams{
 	int word_window;
 	int word_input2conv;
 	int state_represent_dim;
+	int labelFeatDim;
 public:
 	HyperParams(){
 		//maxlength = max_sentence_clength + 1;

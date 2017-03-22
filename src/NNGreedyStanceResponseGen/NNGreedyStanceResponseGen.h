@@ -21,6 +21,8 @@ using namespace std;
 
 class RespondGen {
 public:
+	unordered_map<string, int> m_labelfeat_stats;
+public:
 	RespondGen(size_t memsize);
 	virtual ~RespondGen();
 

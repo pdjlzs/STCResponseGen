@@ -186,9 +186,11 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	int count = 0;
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance &instance = vecInsts[numInstance];
+		const string &labelFeat = instance.stance_label; 
 		for (int idx = 0; idx < instance.postWordsize(); idx++) {
 			m_driver._hyperparams.word_stat[normalize_to_lowerwithdigit(instance.post_words[idx])]++;
 		}
+		m_labelfeat_stats[labelFeat]++;
 	}
 	m_driver._hyperparams.word_stat[nullkey] = m_options.wordCutOff + 1;
 	m_driver._hyperparams.word_stat[unknownkey] = m_options.wordCutOff + 1;
@@ -352,6 +354,10 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	if (!inf.is_open()) {
 		createAlphabet(trainInsts);
 
+		m_driver._modelparams.labelFeatAlpha.initial(m_labelfeat_stats);
+		m_driver._modelparams.labelFeatAlpha.set_fixed_flag(true);
+		cout << "Label features num:" << m_driver._modelparams.labelFeatAlpha.size() << endl;
+
 		//lookup table setting
 		bool initial_successed = false;
 		if (m_options.wordEmbFile != "") {
@@ -367,6 +373,9 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 
 		m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
 		m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
+
+		m_driver._modelparams.labelFeats.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
+
 		m_driver.initial();
 	}
 
@@ -538,7 +547,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 }
 
 void RespondGen::predict(const Instance& input, vector<string>& resp_out) {
-	m_driver.decode(input.post_words, resp_out);
+	m_driver.decode(input, resp_out);
 }
 
 void RespondGen::test(const string& testFile, const string& outputFile, const string& modelFile) {
