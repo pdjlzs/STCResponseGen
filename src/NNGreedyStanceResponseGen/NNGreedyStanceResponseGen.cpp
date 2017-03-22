@@ -190,7 +190,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 		for (int idx = 0; idx < instance.postWordsize(); idx++) {
 			m_driver._hyperparams.word_stat[normalize_to_lowerwithdigit(instance.post_words[idx])]++;
 		}
-		m_labelfeat_stats[labelFeat]++;
+		m_driver._hyperparams.m_labelfeat_stats[labelFeat]++;
 	}
 	m_driver._hyperparams.word_stat[nullkey] = m_options.wordCutOff + 1;
 	m_driver._hyperparams.word_stat[unknownkey] = m_options.wordCutOff + 1;
@@ -203,6 +203,9 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	}
 
 	m_driver._modelparams.word_alpha.initial(m_driver._hyperparams.word_stat, m_options.wordCutOff);
+
+	m_driver._modelparams.labelFeatAlpha.initial(m_driver._hyperparams.m_labelfeat_stats);
+
 	unordered_map<string, int> action_stat;
 
 	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
@@ -250,6 +253,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	cout << "Train file total word num: " << m_driver._hyperparams.word_stat.size() << endl;
 	cout << "Fine tune embedding alphabet remain word num: " << m_driver._modelparams.word_alpha.size() << endl;
 	cout << "External embedding alphabet remain word num: " << m_driver._modelparams.word_ext_alphas.size() << endl;
+	cout << "Label features num:" << m_driver._modelparams.labelFeatAlpha.size() << endl;
 
 	return 0;
 }
@@ -354,9 +358,6 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	if (!inf.is_open()) {
 		createAlphabet(trainInsts);
 
-		m_driver._modelparams.labelFeatAlpha.initial(m_labelfeat_stats);
-		m_driver._modelparams.labelFeatAlpha.set_fixed_flag(true);
-		cout << "Label features num:" << m_driver._modelparams.labelFeatAlpha.size() << endl;
 
 		//lookup table setting
 		bool initial_successed = false;

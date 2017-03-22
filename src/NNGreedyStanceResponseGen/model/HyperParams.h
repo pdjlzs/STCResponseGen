@@ -17,6 +17,7 @@ struct HyperParams{
 	unordered_map<string, vector<int> > random_tabel;		// each word have more than maxCandidAction wil have a random_tabel
 	unordered_map<string, int> triword_stat;	// tri-gram word freq for random tabel
 	unordered_map<string, int> word_stat;
+	unordered_map<string, int> m_labelfeat_stats;
 
 
 	unordered_map<string, float > uni_pro;	// ui-gram dic for calculate perplexity
@@ -105,6 +106,7 @@ public:
 		is >> state_hiddensize;
 		is >> unk_strategy;
 		is >> word_dim;
+		is >> labelFeatDim;
 
 		int size = 0;
 		is >> size;
@@ -170,6 +172,16 @@ public:
 			int freq;
 			is >> freq;
 			word_stat[cur_word] = freq;
+		}
+
+
+		is >> size;
+		for (int i = 0; i < size; i++){
+			string cur_word;
+			is >> cur_word;
+			int freq;
+			is >> freq;
+			m_labelfeat_stats[cur_word] = freq;
 		}
 
 		is >> size;
@@ -238,6 +250,7 @@ public:
 		os << state_hiddensize << endl;
 		os << unk_strategy << endl;
 		os << word_dim << endl;
+		os << labelFeatDim << endl;
 
 		os << trigram_candid.size() << endl;
 		unordered_map<string, vector<string> >::iterator umit = trigram_candid.begin();
@@ -262,6 +275,13 @@ public:
 		unordered_map<string, int> ::iterator umit2 = word_stat.begin();
 		for (; umit2 != word_stat.end(); umit2++){
 			os << umit2->first << " " << umit2->second << endl;
+		}
+
+
+		os << m_labelfeat_stats.size() << endl;
+		unordered_map<string, int> ::iterator umit4 = m_labelfeat_stats.begin();
+		for (; umit4 != m_labelfeat_stats.end(); umit4++){
+			os << umit4->first << " " << umit4->second << endl;
 		}
 
 		os << uni_pro.size() << endl;
@@ -325,6 +345,8 @@ public:
 		cout << "state_hiddensize= " << state_hiddensize << endl;
 		cout << "unk_strategy= " << unk_strategy << endl;
 		cout << "word_dim=" << word_dim << endl;
+		cout << "labelFeatDim=" << labelFeatDim << endl;
+		
 	}
 
 private:
