@@ -314,7 +314,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		m_pipe.readInstances(devFile, devInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
 	if (testFile != "")
 		m_pipe.readInstances(testFile, testInsts, m_driver._hyperparams.maxlength, m_options.maxInstance);
-
+	cout << endl;
 
 	ifstream inf;
 	inf.open(modelFile.c_str());

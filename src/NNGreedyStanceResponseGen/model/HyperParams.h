@@ -136,7 +136,8 @@ public:
 		for (it = trigram_candid.begin(); it != trigram_candid.end(); it++){
 			if (it->second.size() > maxCandidAction){
 				if (it->first == "-start-#-start-") table_size = 1e6;
-				else if (it->second.size() >= 900) table_size = 1e5;
+				//else if (it->second.size() >= 900) table_size = 1e5;
+				else if (it->second.size() >= 400) table_size = 1e5;
 				else table_size = 1e4;
 				random_tabel[it->first].resize(table_size);
 				double d1 = 0, train_words_pow = 0;
