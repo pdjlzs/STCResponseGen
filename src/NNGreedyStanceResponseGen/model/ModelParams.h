@@ -29,12 +29,12 @@ public:
 	UniParams state_hidden;
 
 	Alphabet labelFeatAlpha; //should be intialized outside
-	LookupTable labelFeats; // should be initialized outside
+	LookupTable label_table; // should be initialized outside
 
 public:
 	bool initial(HyperParams &opts, AlignedMemoryPool *mem) {
 
-		opts.labelFeatDim = labelFeats.nDim;
+		opts.labelFeatDim = label_table.nDim;
 		opts.word_dim = word_table.nDim;
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
@@ -56,7 +56,7 @@ public:
 
 	bool initial(HyperParams &opts){
 
-		opts.labelFeatDim = labelFeats.nDim;
+		opts.labelFeatDim = label_table.nDim;
 		opts.word_dim = word_table.nDim;
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
@@ -79,7 +79,7 @@ public:
 		state_hidden.exportAdaParams(ada);
 		scored_action_table.exportAdaParams(ada);
 
-		labelFeats.exportAdaParams(ada);
+		label_table.exportAdaParams(ada);
 	}
 
 	// will add it later
@@ -89,7 +89,7 @@ public:
 		word_ext_alphas.write(os);
 		word_ext_table.save(os);
 		labelFeatAlpha.write(os);
-		labelFeats.save(os);
+		label_table.save(os);
 
 
 		word_conv.save(os);
@@ -112,7 +112,7 @@ public:
 		word_ext_alphas.read(is);
 		word_ext_table.load(is, &word_ext_alphas, mem);
 		labelFeatAlpha.read(is);
-		labelFeats.load(is, &labelFeatAlpha, mem);
+		label_table.load(is, &labelFeatAlpha, mem);
 
 		word_conv.load(is, mem);
 		word_left_lstm.load(is, mem);
@@ -130,7 +130,7 @@ public:
 
 	void loadPretrainModel(std::ifstream &is, HyperParams &opts, AlignedMemoryPool* mem = NULL) {
 
-		opts.labelFeatDim = labelFeats.nDim;
+		opts.labelFeatDim = label_table.nDim;
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
 		opts.word_input2conv = opts.word_represent_dim * opts.word_window;

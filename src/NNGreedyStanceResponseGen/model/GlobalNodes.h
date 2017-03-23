@@ -47,10 +47,10 @@ public:
 		words_left_lstm.init(&params.word_left_lstm, opts.dropProb, true, mem);
 		words_right_lstm.init(&params.word_right_lstm, opts.dropProb, false, mem);
 
-		stance_label.init(params.labelFeats.nDim, opts.dropProb, mem);
-		stance_label.setParam(&params.labelFeats);
-		left_concat_labelFeat.init(opts.word_rnnhiddensize + params.labelFeats.nDim, -1, mem);
-		right_concat_labelFeat.init(opts.word_rnnhiddensize + params.labelFeats.nDim, -1, mem);
+		stance_label.init(params.label_table.nDim, opts.dropProb, mem);
+		stance_label.setParam(&params.label_table);
+		left_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim, -1, mem);
+		right_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim, -1, mem);
 	}
 
 

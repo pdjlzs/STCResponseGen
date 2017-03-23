@@ -325,7 +325,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 			m_driver._hyperparams.m_labelfeat_stats[labelFeat]++;
 		}
 		m_driver._modelparams.labelFeatAlpha.initial(m_driver._hyperparams.m_labelfeat_stats);
-		m_driver._modelparams.labelFeats.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
+		m_driver._modelparams.label_table.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
 
 		loadPretrainModel(modelFile);
 		m_driver.preTrainInitial();
@@ -384,7 +384,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 		m_driver._modelparams.word_table.initial(&m_driver._modelparams.word_alpha, m_options.wordEmbSize, true);
 		m_driver._modelparams.action_table.initial(&m_driver._modelparams.action_alpha, m_options.actionEmbSize, true);
 
-		m_driver._modelparams.labelFeats.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
+		m_driver._modelparams.label_table.initial(&m_driver._modelparams.labelFeatAlpha, m_options.labelFeatEmbSize, m_options.labelFeatEmbFineTune);
 
 		m_driver.initial();
 	}
