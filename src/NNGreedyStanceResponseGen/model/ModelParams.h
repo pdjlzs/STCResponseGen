@@ -164,7 +164,7 @@ public:
 		scored_action_table.initial(&action_alpha, opts.state_hiddensize, true);
 		scored_action_table.load(is, &action_alpha, mem);
 
-		state_hidden.load(is, mem);
+		//state_hidden.load(is, mem);
 	}
 
 };
