@@ -90,7 +90,7 @@ public:
 
     while (pInstance) {
 
-      if (pInstance->post_words.size() < max_sentence_size) {
+      if (pInstance->respon_words.size() < max_sentence_size) {
         Instance trainInstance;
         trainInstance.copyValuesFrom(*pInstance);
         vecInstances.push_back(trainInstance);
