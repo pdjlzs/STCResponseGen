@@ -42,7 +42,7 @@ public:
 		word_right_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
 
 		action_conv.initial(opts.action_hiddensize, opts.action_dim, opts.action_dim, true, mem);
-		action_lstm.initial(opts.action_dim, opts.action_hiddensize, mem);
+		action_lstm.initial(opts.action_rnnhiddensize, opts.action_hiddensize, mem);
 		scored_action_table.initial(&action_alpha, opts.state_hiddensize, true);
 		state_hidden.initial(opts.state_hiddensize, opts.state_represent_dim, true, mem);
 
