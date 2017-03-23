@@ -68,9 +68,9 @@ public:
 
 		state_hiddensize = 100;
 
-		wordEmbSize = 50;
-		wordHiddenSize = 150;
-		wordRNNHiddenSize = 100;
+		wordEmbSize = 100;
+		wordHiddenSize = 300;
+		wordRNNHiddenSize = 300;
 		wordEmbFineTune = false;
 		wordEmbFile = "";
 
@@ -78,9 +78,9 @@ public:
 		mapFile = "";
 		lmFile = "";
 
-		actionEmbSize = 20;
-		actionHiddenSize = 30;
-		actionRNNHiddenSize = 20;
+		actionEmbSize = 50;
+		actionHiddenSize = 100;
+		actionRNNHiddenSize = 100;
 
 		verboseIter = 100;
 		train = false;
