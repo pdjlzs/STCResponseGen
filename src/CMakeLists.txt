@@ -9,5 +9,9 @@ add_subdirectory(GRNNGreedyResponseGen)
 add_subdirectory(NNGreedyStanceResponseGen)
 add_subdirectory(RNNGreedyStanceResponseGen)
 add_subdirectory(GRNNGreedyStanceResponseGen)
+add_subdirectory(NNGreedyEmotResponseGen)
+add_subdirectory(RNNGreedyEmotResponseGen)
+add_subdirectory(GRNNGreedyEmotResponseGen)
+
 
 
