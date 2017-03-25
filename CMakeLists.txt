@@ -9,15 +9,15 @@ function(find_mkl)
   set(MKL_ARCH intel64)
   set(MKL_ROOT /opt/intel/mkl)
   find_path(MKL_INCLUDE_DIR mkl.h
-            PATHS ${MKL_ROOT} ${MKL_ROOT}/include)
+          PATHS ${MKL_ROOT} ${MKL_ROOT}/include)
   find_library(MKL_CORE_LIB NAMES mkl_intel_lp64 mkl_sequential mkl_core
-               PATHS ${MKL_ROOT} ${MKL_ROOT}/lib/${MKL_ARCH}
-               DOC "MKL core library path")
+          PATHS ${MKL_ROOT} ${MKL_ROOT}/lib/${MKL_ARCH}
+          DOC "MKL core library path")
 
   find_library(MKL_COMPILER_LIB NAMES iomp5 libiomp5md
-               PATHS ${MKL_ROOT} ${MKL_ROOT}/../compiler/lib/${MKL_ARCH}              #Windows
-                     ${MKL_ROOT}/../compilers_and_libraries/linux/lib/${MKL_ARCH}_lin #Linux
-               DOC "MKL compiler lib (for threaded MKL)")
+          PATHS ${MKL_ROOT} ${MKL_ROOT}/../compiler/lib/${MKL_ARCH}              #Windows
+          ${MKL_ROOT}/../compilers_and_libraries/linux/lib/${MKL_ARCH}_lin #Linux
+          DOC "MKL compiler lib (for threaded MKL)")
 
   if(MKL_INCLUDE_DIR AND MKL_CORE_LIB AND MKL_COMPILER_LIB)
     get_filename_component(MKL_CORE_LIB_DIR ${MKL_CORE_LIB} DIRECTORY)
@@ -49,11 +49,18 @@ if (MKL OR MKL_ROOT)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEIGEN_USE_MKL_ALL")
 endif()
 
+######## Compiler-specific options
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W1 -DEIGEN_HAS_C99_MATH /MP")   # -Wall produces 20k warnings
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -funroll-loops -Wall -Wno-missing-braces -std=c++11 -Ofast -g -march=native")
+endif()
 
+set(CMAKE_BUILD_TYPE "RELEASE")
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -w -msse3 -funroll-loops  -std=c++11 -O0 -pg" )
 else()
-    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -funroll-loops -w -std=c++11 -O3 -march=native" )
+    SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -fPIC -funroll-loops -w -std=c++11 -Ofast -march=native" )
 endif()
 add_definitions( -DUSE_FLOAT )
 
