@@ -271,7 +271,7 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 		while (!state[actionNum].IsTerminated()) {
 			state[actionNum].getGoldAction(instance.respon_words, answer);
 			vecActions[numInstance].push_back(answer);
-			state[actionNum].move(&state[actionNum + 2], answer);
+			state[actionNum].move(&state[actionNum + 1], answer);
 			actionNum++;
 		}
 
