@@ -9,8 +9,8 @@ struct GlobalNodes {
 	vector<ConcatNode> word_represent;
 	WindowBuilder word_window;
 	vector<UniNode> window_tanh_conv;
-	LSTM1Builder words_left_lstm;
-	LSTM1Builder words_right_lstm;
+	RNNBuilder words_left_rnn;
+	RNNBuilder words_right_rnn;
 	PNode word_left_lstm;
 	PNode word_right_lstm;
 
@@ -21,8 +21,8 @@ public:
 		word_represent.resize(max_length);
 		word_window.resize(max_length);
 		window_tanh_conv.resize(max_length);
-		words_left_lstm.resize(max_length);
-		words_right_lstm.resize(max_length);
+		words_left_rnn.resize(max_length);
+		words_right_rnn.resize(max_length);
 	}
 
 public:
@@ -40,8 +40,8 @@ public:
 		}
 
 		word_window.init(opts.word_represent_dim, opts.word_context, mem);
-		words_left_lstm.init(&params.word_left_lstm, opts.dropProb, true, mem);
-		words_right_lstm.init(&params.word_right_lstm, opts.dropProb, false, mem);
+		words_left_rnn.init(&params.word_left_rnn, opts.dropProb, true, mem);
+		words_right_rnn.init(&params.word_right_rnn, opts.dropProb, false, mem);
 	}
 
 
@@ -71,11 +71,11 @@ public:
 			window_tanh_conv[idx].forward(cg, &word_window._outputs[idx]);
 		}
 
-		words_left_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
-		words_right_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
+		words_left_rnn.forward(cg, getPNodes(window_tanh_conv, word_size));
+		words_right_rnn.forward(cg, getPNodes(window_tanh_conv, word_size));
 
-		word_left_lstm = &words_left_lstm._hiddens[word_size - 1];
-		word_right_lstm = &words_right_lstm._hiddens[0];
+		word_left_lstm = &words_left_rnn._output[word_size - 1];
+		word_right_lstm = &words_right_rnn._output[0];
 	}
 
 };
