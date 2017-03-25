@@ -5,7 +5,7 @@
  *      Author: mszhang
  */
 
-#include "NNGreedyStanceResponseGen.h"
+#include "GRNNGreedyStanceResponseGen.h"
 
 #include "Argument_helper.h"
 

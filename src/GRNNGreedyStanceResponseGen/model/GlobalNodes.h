@@ -10,8 +10,8 @@ struct GlobalNodes {
 	vector<ConcatNode> word_represent;
 	WindowBuilder word_window;
 	vector<UniNode> window_tanh_conv;
-	LSTM1Builder words_left_lstm;
-	LSTM1Builder words_right_lstm;
+	GRNNBuilder  words_left_grnn;
+	GRNNBuilder  words_right_grnn;
 	PNode word_left_lstm;
 	PNode word_right_lstm;
 	LookupNode stance_label;
@@ -25,8 +25,8 @@ public:
 		word_represent.resize(max_length);
 		word_window.resize(max_length);
 		window_tanh_conv.resize(max_length);
-		words_left_lstm.resize(max_length);
-		words_right_lstm.resize(max_length);
+		words_left_grnn.resize(max_length);
+		words_right_grnn.resize(max_length);
 	}
 
 public:
@@ -44,8 +44,8 @@ public:
 		}
 
 		word_window.init(opts.word_represent_dim, opts.word_context, mem);
-		words_left_lstm.init(&params.word_left_lstm, opts.dropProb, true, mem);
-		words_right_lstm.init(&params.word_right_lstm, opts.dropProb, false, mem);
+		words_left_grnn.init(&params.word_left_grnn, opts.dropProb, true, mem);
+		words_right_grnn.init(&params.word_right_grnn, opts.dropProb, false, mem);
 
 		stance_label.init(params.label_table.nDim, opts.dropProb, mem);
 		stance_label.setParam(&params.label_table);
@@ -85,11 +85,11 @@ public:
 			window_tanh_conv[idx].forward(cg, &word_window._outputs[idx]);
 		}
 
-		words_left_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
-		words_right_lstm.forward(cg, getPNodes(window_tanh_conv, word_size));
+		words_left_grnn.forward(cg, getPNodes(window_tanh_conv, word_size));
+		words_right_grnn.forward(cg, getPNodes(window_tanh_conv, word_size));
 
-		left_concat_labelFeat.forward(cg, &stance_label, &words_left_lstm._hiddens[word_size - 1]);
-		right_concat_labelFeat.forward(cg, &stance_label, &words_right_lstm._hiddens[0]);
+		left_concat_labelFeat.forward(cg, &stance_label, &words_left_grnn._rnn_nodes[word_size - 1]);
+		right_concat_labelFeat.forward(cg, &stance_label, &words_right_grnn._rnn_nodes[0]);
 
 		word_left_lstm = &left_concat_labelFeat;
 		word_right_lstm = &right_concat_labelFeat;

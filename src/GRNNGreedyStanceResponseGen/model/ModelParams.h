@@ -15,8 +15,8 @@ public:
 	LookupTable word_ext_table; // should be initialized outside
 
 	UniParams word_conv; // word tanh after concat
-	LSTM1Params word_left_lstm; //left lstm
-	LSTM1Params word_right_lstm; //right lstm
+	GRNNParams  word_left_grnn; //left grnn
+	GRNNParams  word_right_grnn; //right grnn
 
 	//parameters used in action nodes
 	Alphabet action_alpha;
@@ -43,8 +43,8 @@ public:
 
 
 		word_conv.initial(opts.word_hiddensize, opts.word_input2conv, true, mem);
-		word_left_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem); 
-		word_right_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
+		word_left_grnn.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem); 
+		word_right_grnn.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
 
 		action_conv.initial(opts.action_hiddensize, opts.action_dim, opts.action_dim, true, mem);
 		action_lstm.initial(opts.action_rnnhiddensize, opts.action_hiddensize, mem);
@@ -70,8 +70,8 @@ public:
 		word_table.exportAdaParams(ada);
 		word_ext_table.exportAdaParams(ada);
 		word_conv.exportAdaParams(ada);
-		word_left_lstm.exportAdaParams(ada);
-		word_right_lstm.exportAdaParams(ada);
+		word_left_grnn.exportAdaParams(ada);
+		word_right_grnn.exportAdaParams(ada);
 		action_table.exportAdaParams(ada);
 
 		action_conv.exportAdaParams(ada);
@@ -93,8 +93,8 @@ public:
 
 
 		word_conv.save(os);
-		word_left_lstm.save(os);
-		word_right_lstm.save(os);
+		word_left_grnn.save(os);
+		word_right_grnn.save(os);
 
 		action_alpha.write(os);
 		action_table.save(os);
@@ -115,8 +115,8 @@ public:
 		label_table.load(is, &labelFeatAlpha, mem);
 
 		word_conv.load(is, mem);
-		word_left_lstm.load(is, mem);
-		word_right_lstm.load(is, mem);
+		word_left_grnn.load(is, mem);
+		word_right_grnn.load(is, mem);
 
 		action_alpha.read(is);
 		action_table.load(is, &action_alpha, mem);
@@ -137,8 +137,8 @@ public:
 		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim) * 2 + opts.action_rnnhiddensize;
 
 		word_conv.initial(opts.word_hiddensize, opts.word_input2conv, true, mem);
-		word_left_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
-		word_right_lstm.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
+		word_left_grnn.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
+		word_right_grnn.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
 
 		action_conv.initial(opts.action_hiddensize, opts.action_dim, opts.action_dim, true, mem);
 		action_lstm.initial(opts.action_rnnhiddensize, opts.action_hiddensize, mem);
@@ -152,8 +152,8 @@ public:
 		word_ext_table.load(is, &word_ext_alphas, mem);
 
 		word_conv.load(is, mem);
-		word_left_lstm.load(is, mem);
-		word_right_lstm.load(is, mem);
+		word_left_grnn.load(is, mem);
+		word_right_grnn.load(is, mem);
 
 		action_alpha.read(is);
 		action_table.initial(&action_alpha, opts.action_dim, true);
