@@ -257,7 +257,7 @@ void RespondGen::getGoldActions(const vector<Instance>& vecInsts, vector<vector<
 	vecActions.clear();
 
 	Metric eval;
-	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
+	vector<CStateItem> state(m_driver._hyperparams.maxlength + 2);
 	vector<string> respon_output;
 	CAction answer;
 	eval.reset();
