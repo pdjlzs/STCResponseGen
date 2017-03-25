@@ -15,6 +15,7 @@ struct GlobalNodes {
 	PNode word_left_lstm;
 	PNode word_right_lstm;
 	LookupNode stance_label;
+	LookupNode emotion_label;
 	ConcatNode left_concat_labelFeat;
 	ConcatNode right_concat_labelFeat;
 
@@ -49,8 +50,11 @@ public:
 
 		stance_label.init(params.label_table.nDim, opts.dropProb, mem);
 		stance_label.setParam(&params.label_table);
-		left_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim, -1, mem);
-		right_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim, -1, mem);
+		emotion_label.init(params.label_table.nDim, opts.dropProb, mem);
+		emotion_label.setParam(&params.label_table);
+
+		left_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim * 2, -1, mem);
+		right_concat_labelFeat.init(opts.word_rnnhiddensize + params.label_table.nDim * 2, -1, mem);
 	}
 
 
@@ -58,8 +62,9 @@ public:
 	inline void forward(Graph* cg, const Instance& inst, HyperParams* hyparams){
 		const vector<string>& words = inst.post_words;
 		string stance = inst.stance_label;
+		string emotion = inst.emotion_label;
 		stance_label.forward(cg, stance);
-
+		emotion_label.forward(cg, emotion);
 
 		string currWord;
 		int word_size = words.size();
@@ -88,8 +93,8 @@ public:
 		words_left_grnn.forward(cg, getPNodes(window_tanh_conv, word_size));
 		words_right_grnn.forward(cg, getPNodes(window_tanh_conv, word_size));
 
-		left_concat_labelFeat.forward(cg, &stance_label, &words_left_grnn._rnn_nodes[word_size - 1]);
-		right_concat_labelFeat.forward(cg, &stance_label, &words_right_grnn._rnn_nodes[0]);
+		left_concat_labelFeat.forward(cg, &stance_label, &emotion_label, &words_left_grnn._rnn_nodes[word_size - 1]);
+		right_concat_labelFeat.forward(cg, &stance_label, &emotion_label, &words_right_grnn._rnn_nodes[0]);
 
 		word_left_lstm = &left_concat_labelFeat;
 		word_right_lstm = &right_concat_labelFeat;
