@@ -2,23 +2,43 @@ cmake .. -DEIGEN3_INCLUDE_DIR=/c/eigen/ -DN3L_INCLUDE_DIR=/d/workspace/LibN3L-2.
 cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/
 cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/LibN3L-2.0/ -DMKL=TRUE
 
-#Nomal
+#lstm
 #Windows
 -l -train D:\data\STCRG\post_resp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
--model D:\data\STCRG\model -test D:\data\STCRG\emotResp.test -output D:\data\STCRG\emotResp.test.output
 
 #linux
 ~/workspace/STCResponseGen/bin/NNGreedyResponseGen -l -train ~/data/STCRG/post_resp.train -dev ~/data/STCRG/emotResp.dev -test ~/data/STCRG/emotResp.test  -model ~/data/STCRG/model -option ~/data/STCRG/optionLinux.lstmgredy
 ~/workspace/STCResponseGen/bin/NNGreedyResponseGen  -model modelfile -test ~/data/STCRG/stcom.gold -output stcom.output
 
-#Stance
+#lstm_Stance
 #Windows
 -l -train D:\data\STCRG\emotResp.train -dev D:\data\STCRG\emotResp.dev -test D:\data\STCRG\emotResp.test -model D:\data\STCRG\model -option D:\data\STCRG\optionx64.debug
 -model D:\data\STCRG\model -test D:\data\STCRG\emotResp.test -output D:\data\STCRG\emotResp.test.output
 
 #linux
-~/workspace/STCResponseGen/bin/NNGreedyResponseGen -l -train ~/data/STCRG/post_resp.train -dev ~/data/STCRG/emotResp.dev -test ~/data/STCRG/emotResp.test  -model ~/data/STCRG/model -option ~/data/STCRG/optionLinux.lstmgredy
-~/workspace/STCResponseGen/bin/NNGreedyResponseGen  -model modelfile -test ~/data/STCRG/stcom.gold -output stcom.output
-
-#stance
 ~/workspace/STCResponseGen/bin/NNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option ~/data/STCRG/optionLinux.lstmgredy
+
+#LSTM
+~/workspace/STCResponseGen/bin/NNGreedyResponseGen -l -train post_resp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.lstm
+#RNN
+~/workspace/STCResponseGen/bin/RNNGreedyResponseGen -l -train post_resp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.rnn
+#GRNN
+~/workspace/STCResponseGen/bin/GRNNGreedyResponseGen -l -train post_resp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.grnn
+
+
+
+#LSTM
+~/workspace/STCResponseGen/bin/NNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.stance
+#RNN
+~/workspace/STCResponseGen/bin/RNNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.stance
+#GRNN
+~/workspace/STCResponseGen/bin/GRNNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.stance
+
+
+
+#LSTM
+~/workspace/STCResponseGen/bin/NNGreedyStanceResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.stanDriven
+#RNN
+~/workspace/STCResponseGen/bin/RNNGreedyStanceResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.stanDriven
+#GRNN
+~/workspace/STCResponseGen/bin/GRNNGreedyStanceResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.stanDriven
