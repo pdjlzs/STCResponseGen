@@ -5,7 +5,7 @@
  *      Author: mszhang
  */
 
-#include "RNNGreedyStanceResponseGen.h"
+#include "RNNGreedyBothResponseGen.h"
 
 #include "Argument_helper.h"
 
@@ -186,11 +186,15 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 	int count = 0;
 	for (numInstance = 0; numInstance < vecInsts.size(); numInstance++) {
 		const Instance &instance = vecInsts[numInstance];
-		const string &labelFeat = instance.stance_label;
+		const string &stance_labelFeat = instance.stance_label;
+		const string &emot_labelFeat = instance.emotion_label;
+
 		for (int idx = 0; idx < instance.postWordsize(); idx++) {
 			m_driver._hyperparams.word_stat[normalize_to_lowerwithdigit(instance.post_words[idx])]++;
 		}
-		m_driver._hyperparams.m_labelfeat_stats[labelFeat]++;
+		m_driver._hyperparams.m_labelfeat_stats[stance_labelFeat]++;
+		m_driver._hyperparams.m_labelfeat_stats[emot_labelFeat]++;
+
 	}
 	m_driver._hyperparams.word_stat[nullkey] = m_options.wordCutOff + 1;
 	m_driver._hyperparams.word_stat[unknownkey] = m_options.wordCutOff + 1;
