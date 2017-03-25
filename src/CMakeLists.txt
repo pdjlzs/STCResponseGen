@@ -7,5 +7,7 @@ add_subdirectory(NNGreedyResponseGen)
 add_subdirectory(RNNGreedyResponseGen)
 add_subdirectory(GRNNGreedyResponseGen)
 add_subdirectory(NNGreedyStanceResponseGen)
+add_subdirectory(RNNGreedyStanceResponseGen)
+add_subdirectory(GRNNGreedyStanceResponseGen)
 
 
