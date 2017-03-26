@@ -27,7 +27,7 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 ~/workspace/STCResponseGen/bin/GRNNGreedyResponseGen -l -train post_resp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.grnn
 
 
-
+#STANCE
 #LSTM
 ~/workspace/STCResponseGen/bin/NNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.stance
 #RNN
@@ -43,3 +43,20 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 ~/workspace/STCResponseGen/bin/RNNGreedyStanceResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.stanDriven
 #GRNN
 ~/workspace/STCResponseGen/bin/GRNNGreedyStanceResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.stanDriven
+
+#EMOTION
+#LSTM
+~/workspace/STCResponseGen/bin/NNGreedyEmotResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.emot
+#RNN
+~/workspace/STCResponseGen/bin/RNNGreedyEmotResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.emot
+#GRNN
+~/workspace/STCResponseGen/bin/GRNNGreedyEmotResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.emot
+
+
+
+#LSTM
+~/workspace/STCResponseGen/bin/NNGreedyEmotResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.emotDriven
+#RNN
+~/workspace/STCResponseGen/bin/RNNGreedyEmotResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.emotDriven
+#GRNN
+~/workspace/STCResponseGen/bin/GRNNGreedyEmotResponseGen -l -train emotResp.driven.train -dev emotResp.driven.dev -test emotResp.driven.test  -model model -option optionLinux.emotDriven
