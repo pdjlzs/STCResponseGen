@@ -321,7 +321,7 @@ void RespondGen::train(const string& trainFile, const string& devFile, const str
 	if (inf.is_open()) {
 		for (int numInstance = 0; numInstance < trainInsts.size(); numInstance++) {
 			const Instance &instance = trainInsts[numInstance];
-			const string &labelFeat = instance.stance_label;
+			const string &labelFeat = instance.emotion_label;
 			m_driver._hyperparams.m_labelfeat_stats[labelFeat]++;
 		}
 		m_driver._modelparams.labelFeatAlpha.initial(m_driver._hyperparams.m_labelfeat_stats);
