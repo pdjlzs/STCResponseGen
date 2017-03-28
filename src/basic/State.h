@@ -215,9 +215,10 @@ public:
 
 				for (it = index_set.begin(); it != index_set.end(); it++){
 					string candid_word = wordCandi[*it];
-					if (candid_word != _word && candid_word != preword)
+					if (candid_word != _word && candid_word != preword) {
 						ac.set(CAction::SEP, candid_word);
-					actions.push_back(ac);
+						actions.push_back(ac);
+					}
 				}
 
 			}
