@@ -214,7 +214,9 @@ public:
 				cout << endl;*/
 
 				for (it = index_set.begin(); it != index_set.end(); it++){
-					ac.set(CAction::SEP, wordCandi[*it]);
+					string candid_word = wordCandi[*it];
+					if (candid_word != _word && candid_word != preword)
+						ac.set(CAction::SEP, candid_word);
 					actions.push_back(ac);
 				}
 
@@ -270,7 +272,7 @@ public:
 	inline void prepare(HyperParams* hyper_params, ModelParams* model_params, GlobalNodes& global_nodes){
 
 		_atomFeat.str_1AC = _lastAction.str();
-		_atomFeat.str_2AC = _prevState == 0 ? nullkey : _prevState->_lastAction.str();
+		_atomFeat.str_2AC = _prevState == 0 ? "-start-" : _prevState->_lastAction.str();
 		_atomFeat.pre_actions_lstm = _prevState == 0 ? NULL : &(_prevState->_nextscores.action_lstm);
 		_atomFeat.post_words_left_lstm = global_nodes.word_left_lstm;
 		_atomFeat.post_words_right_lstm = global_nodes.word_right_lstm;
