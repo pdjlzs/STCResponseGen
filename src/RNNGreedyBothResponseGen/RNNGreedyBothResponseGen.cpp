@@ -212,7 +212,7 @@ int RespondGen::createAlphabet(const vector<Instance>& vecInsts) {
 
 	unordered_map<string, int> action_stat;
 
-	vector<CStateItem> state(m_driver._hyperparams.maxlength + 1);
+	vector<CStateItem> state(m_driver._hyperparams.maxlength + 2);
 	vector<string> respon_output;
 	CAction answer;
 	Metric eval;
