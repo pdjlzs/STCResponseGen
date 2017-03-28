@@ -61,7 +61,7 @@ public:
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
 		opts.word_input2conv = opts.word_represent_dim * opts.word_window;
-		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim) * 2 + opts.action_rnnhiddensize;
+		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim * 2) * 2 + opts.action_rnnhiddensize;
 		return true;
 	}
 
@@ -134,7 +134,7 @@ public:
 		opts.word_represent_dim = opts.word_dim * 2;
 		opts.word_window = 2 * opts.word_context + 1;
 		opts.word_input2conv = opts.word_represent_dim * opts.word_window;
-		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim) * 2 + opts.action_rnnhiddensize;
+		opts.state_represent_dim = (opts.word_rnnhiddensize + opts.labelFeatDim * 2) * 2 + opts.action_rnnhiddensize;
 
 		word_conv.initial(opts.word_hiddensize, opts.word_input2conv, true, mem);
 		word_left_grnn.initial(opts.word_rnnhiddensize, opts.word_hiddensize, mem);
