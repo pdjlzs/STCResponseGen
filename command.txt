@@ -19,6 +19,7 @@ cmake .. -DEIGEN3_INCLUDE_DIR=~/workspace/eigen/ -DN3L_INCLUDE_DIR=~/workspace/L
 #linux
 ~/workspace/STCResponseGen/bin/NNGreedyStanceResponseGen -l -train emotResp.train -dev emotResp.dev -test emotResp.test  -model model -option ~/data/STCRG/optionLinux.lstmgredy
 
+#NORMAL
 #LSTM
 ~/workspace/STCResponseGen/bin/NNGreedyResponseGen -l -train post_resp.train -dev emotResp.dev -test emotResp.test  -model model -option optionLinux.lstm
 #RNN

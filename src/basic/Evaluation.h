@@ -27,15 +27,15 @@ public:
 
   double getPerplexity()
   {
-	  //return exp(-sum_logprobabi * log(10.0) / word_num);
-	  return exp(-sum_logprobabi / word_num);
+	  return exp(-sum_logprobabi * log(10.0) / word_num);
+	  //return exp(-sum_logprobabi / word_num);
   }
 
 
   void print()
   {
-	  //std::cout << "Perplexity\tP=" << "exp(-" << sum_logprobabi << "* log(10.0) /" << word_num << ")=" << getPerplexity() << std::endl;
-	  std::cout << "Perplexity\tP=" << "exp(-" << sum_logprobabi << "/" << word_num << ")=" << getPerplexity() << std::endl;
+	  std::cout << "Perplexity\tP=" << "exp(-" << sum_logprobabi << "* log(10.0) /" << word_num << ")=" << getPerplexity() << std::endl;
+	 // std::cout << "Perplexity\tP=" << "exp(-" << sum_logprobabi << "/" << word_num << ")=" << getPerplexity() << std::endl;
   }
 
 

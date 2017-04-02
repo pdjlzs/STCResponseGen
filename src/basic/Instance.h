@@ -82,7 +82,7 @@ public:
 		}
 		else if (uni_back.find(last_word) != uni_back.end())   // bi-gram = backoff(last_word) + pro(cur_word)
 			return uni_back[last_word] + getUnigram(cur_word, opts);
-		else return -7;
+		else return 0;
 	}
 
 	double getTrigram(const string& last2_word, const string& last_word, const string& cur_word, HyperParams& opts) const {
@@ -101,7 +101,7 @@ public:
 			return bi_back[backoffgram] + getBigram(last_word, cur_word, opts);
 		}
 		else {	//tri-gram = 0.7 * pro(trigram) + 0.2 * pro(bigram) + 0.1 * pro(unigram)
-			return  0.7*-7 + 0.2*getBigram(last_word, cur_word, opts) + 0.1* getUnigram(cur_word, opts);
+			return  0.7*0 + 0.2*getBigram(last_word, cur_word, opts) + 0.1* getUnigram(cur_word, opts);
 		}
 
 	}
